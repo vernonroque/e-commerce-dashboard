@@ -28,8 +28,6 @@ const kpis = [
 
 function KpiSummary(){
 
-   
-
     return (
         <div className="kpi-summary">
             {

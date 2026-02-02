@@ -1,0 +1,27 @@
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.inventory-table thead {
+  background: #f3f4f6;
+}
+
+.inventory-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.inventory-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.warning {
+  color: #dc2626;
+  font-weight: 600;
+}
