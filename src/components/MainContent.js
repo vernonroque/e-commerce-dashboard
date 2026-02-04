@@ -7,7 +7,6 @@ import InventoryAlerts from './InventoryAlerts';
 
 function MainContent(){
 
-
     return(
         <div className = "MainContent">
             <KpiSummary />
