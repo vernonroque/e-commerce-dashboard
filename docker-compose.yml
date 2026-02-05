@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: dev-mysql
+    environment:
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306" # optional, only if you want to connect from host
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build: ./backend
+    container_name: backend-api
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_USER: app_user
+      DB_PASSWORD: app_password
+      DB_NAME: app_db
+    depends_on:
+      - db
+
+volumes:
+  db_data:
