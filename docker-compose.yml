@@ -10,8 +10,8 @@ services:
     ports:
       - "3306:3306" # optional, only if you want to connect from host
     volumes:
+      - ./init/:/docker-entrypoint-initdb.d
       - db_data:/var/lib/mysql
-
   backend:
     build: ./backend
     container_name: backend-api
@@ -22,8 +22,8 @@ services:
       DB_USER: app_user
       DB_PASSWORD: app_password
       DB_NAME: app_db
+      PORT: "8080"
     depends_on:
       - db
-
 volumes:
   db_data:
