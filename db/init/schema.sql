@@ -1,5 +1,9 @@
-CREATE DATABASE `ecommerceDashboard`;
+CREATE DATABASE IF NOT EXISTS `ecommerceDashboard`;
 USE `ecommerceDashboard`;
+
+-- Grant privileges to app_user
+GRANT ALL PRIVILEGES ON ecommerceDashboard.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
 
 CREATE TABLE users (
     id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,

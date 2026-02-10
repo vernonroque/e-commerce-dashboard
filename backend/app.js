@@ -1,3 +1,4 @@
+//this file is to hold the top view routes
 const express = require('express');
 const app = express();
 require('dotenv').config();

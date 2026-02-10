@@ -16,17 +16,13 @@ authRouter.post('/register', async (req, res) => {
 
     // TODO: Hash password with bcrypt before storing
     const query = 'INSERT INTO users (email, password_hash) VALUES (?, ?)';
-    db.query(query, [email, password], (err, results) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ error: 'Email already exists' });
-        }
-        console.error('Error creating user:', err);
-        return res.status(500).json({ error: 'Failed to register user' });
-      }
-      res.status(201).json({ message: 'User registered', userId: results.insertId });
-    });
+    const [results] = await db.query(query, [email, password]);
+    res.status(201).json({ message: 'User registered', userId: results.insertId });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    console.error('Error creating user:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -1,3 +1,4 @@
+//this file is mainly used to start the backend server
 const app = require('./app');
 require("dotenv").config(); // if you use .env
 require('./db');

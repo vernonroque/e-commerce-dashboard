@@ -10,7 +10,7 @@ function Dashboard() {
     useEffect(() => {
        
         const fetchSummary = async () =>{
-            const url = 'http://localhost:8080/api/dashboard/summary';
+            const url = 'http://localhost:8080/api/dashboard';
             
             const response = await fetch(url);
             const jsonResponse = await response.json();
