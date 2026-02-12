@@ -1,5 +1,7 @@
 const express = require('express');
 const db = require('../../db');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const authRouter = express.Router();
 
 authRouter.get('/', async (req, res) => { 

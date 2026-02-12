@@ -1,7 +1,7 @@
 USE `ecommerceDashboard`;
 
-INSERT INTO users (email, password_hash)
-VALUES ('owner@example.com', 'hashed_password_here');
+INSERT INTO users (email, first_name, last_name, password_hash)
+VALUES ('owner@example.com', 'John','Doe', 'hashed_password_here');
 
 INSERT INTO stores (user_id, name, platform, currency, timezone)
 VALUES
