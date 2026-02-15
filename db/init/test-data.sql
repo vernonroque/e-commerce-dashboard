@@ -1,7 +1,19 @@
 USE `ecommerceDashboard`;
 
-INSERT INTO users (email, first_name, last_name, password_hash)
-VALUES ('owner@example.com', 'John','Doe', 'hashed_password_here');
+INSERT INTO users (first_name, last_name, email, password_hash)
+VALUES 
+('Jim', 'Beam', 'owner@example.com', '$2b$10$bdo.YC5VcQ/2boyZksO9XuIkqmwpoeEsYLjCNTsJUla0yohLhC7Gy'),
+('John', 'Doe', 'john.doe@example.com', '$2b$10$zbwUmqZ/ChlWYO969TCbBuQYuWGs9tBjM8QflKcHbdV/ZlL7xc4EW'),
+('Jane', 'Smith', 'jane.smith@example.com', '$2b$10$r8GelXYlMFUMkF0kkl.QqOZUNRd5epr2KCawkW7f7A6vr.ATRwKVO'),
+('Mike', 'Jordan', 'mike.jordan@example.com', '$2b$10$Ayl3giqp4LfJmOcOCF8vd.DBgAkeh.atKyQXECrPHodr7lFpQp9zK'),
+('Sarah', 'Connor', 'sarah.connor@example.com', '$2b$10$zRS.ux/5of.FFxNikxfGcu1q6IlqMBYrHy.QtVoW7nFsveDFRqUMm'),
+('Tony', 'Stark', 'tony.stark@example.com', '$2b$10$PSAJw11RVtCbny/0jeeFt.w1ench5H3sJLRWnT/INIa9ztn.5p6Zm'),
+('Bruce', 'Wayne', 'bruce.wayne@example.com', '$2b$10$99Vuyutf6RjtIJnZ8U42YuZXh9KOge.kPHZaayPed.YusVaOcB9bW'),
+('Peter', 'Parker', 'peter.parker@example.com', '$2b$10$r7SS.5oWkFJWV/AaYhtTDuM6zFo.jjtFxUTGCwZ6BX/x6vN6yepAC'),
+('Clark', 'Kent', 'clark.kent@example.com', '$2b$10$44nUYIg205TuCxXiFircWePxsBtu0N5vBgdmJPVC8v/2WOYPPZue2'),
+('Diana', 'Prince', 'diana.prince@example.com', '$2b$10$33FEfRLEZJMnqGtRTZvMse8t9ylDNLZm0hzf.51C7dOqC/dKBUsrW'),
+('Steve', 'Rogers', 'steve.rogers@example.com', '$2b$10$18Yoe.L5W.ACtKNXLfMLyeInsSRtEDHTTkN5luTrdMRJuQeGo2r4i');
+
 
 INSERT INTO stores (user_id, name, platform, currency, timezone)
 VALUES

@@ -9,11 +9,12 @@ function Signup() {
 
         const fetchSearch = async () => {
             const formData = new FormData(e.target);
+            console.log("The form data is >>>", formData);
             const data = Object.fromEntries(formData.entries());
-            console.log('Form Data:', data);
+            console.log('Form Data in an object:', data);
         
             try {
-                const response = await fetch('http://localhost:3001/api/auth/register', {
+                const response = await fetch('http://localhost:8080/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -40,16 +41,16 @@ function Signup() {
             <h1>This is the signup component</h1>
             <form className = 'signupForm' onSubmit={handleSubmit}>
                 <label htmlFor="firstname">First Name:</label>
-                <input type="text" class="firstname" name="firstname" required />
+                <input type="text" className="firstname" name="firstname" required />
 
                 <label htmlFor="lastname">Last Name:</label>
-                <input type="text" class="lastname" name="lastname" required />
+                <input type="text" className="lastname" name="lastname" required />
 
                 <label htmlFor="email">Email:</label>
-                <input type="email" id="email" name="email" required />
+                <input type="email" className="email" name="email" required />
 
                 <label htmlFor="password">Password:</label>
-                <input type="password" id="password" name="password" required />
+                <input type="password" className="password" name="password" required />
 
                 <button type="submit">Sign Up</button>
             </form>

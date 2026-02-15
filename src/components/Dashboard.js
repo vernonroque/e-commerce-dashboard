@@ -9,16 +9,20 @@ function Dashboard() {
     const [success, setSuccess] = useState(false);
     useEffect(() => {
        
-        const fetchSummary = async () =>{
+        const fetchSummary = async () => {
             const url = 'http://localhost:8080/api/dashboard';
             
             const response = await fetch(url);
             const jsonResponse = await response.json();
-
             if(jsonResponse.ok){
                 setSuccess(true);
             }
-            console.log("This is the jsonResponse >>>", jsonResponse);
+            try{
+                console.log("This is the jsonResponse >>>", jsonResponse);
+            }catch(error){
+                console.log("there is an error >>>", error);
+            }
+            
         };
 
         fetchSummary();
