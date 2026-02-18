@@ -8,6 +8,7 @@ function Login() {
         e.preventDefault();
 
         const fetchSearch = async () => {
+            console.log("Login function triggered");
             const formData = new FormData(e.target);
             console.log("The form data is >>>", formData);
             const data = Object.fromEntries(formData.entries());
@@ -19,8 +20,19 @@ function Login() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data),
                 });
+
+                if (response.status === 401) {
+                    await fetch('http://localhost:8080/api/auth/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include'
+                    });
+                }
         
                 if (!response.ok) {
                     const errorData = await response.json();

@@ -4,22 +4,30 @@ const db = require('../../db');
 const dashboardRouter = express.Router();
 
 dashboardRouter.get('/', async (req,res) => {
-
-  console.log("Im in the dashboard route");
+  if(res.status === 401) return;
+  
   const query = `
     SELECT *
     FROM orders
   `;
 
   try {
-    const result = await db.query(query);
-    console.log("The result of the query is >>>", result);
+
+    // const result = await db.query(query);
+    // console.log("The result of the query is >>>", result);
+
     const [rows] = await db.query(query);
-    console.log("The row data type is >>", typeof rows);
-    res.json(rows);
+    // console.log("The row data type is >>", typeof rows);
+
+    res.json({"rows": rows,
+              "ok":true
+            });
+
   } catch (err) {
+
     console.error('Error fetching orders:', err);
     res.status(500).json({ error: 'Failed to fetch orders' });
+
   }
 
 });
