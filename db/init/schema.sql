@@ -6,7 +6,7 @@ GRANT ALL PRIVILEGES ON ecommerceDashboard.* TO 'app_user'@'%';
 FLUSH PRIVILEGES;
 
 CREATE TABLE users (
-    id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -17,8 +17,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE sessions (
-  id MEDIUMINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id MEDIUMINT UNSIGNED NOT NULL,
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
   refresh_token_hash TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME NOT NULL,
@@ -27,8 +27,8 @@ CREATE TABLE sessions (
 
 
 CREATE TABLE stores (
-    id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id MEDIUMINT UNSIGNED NOT NULL,
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
     name VARCHAR(255) NOT NULL,
     platform ENUM('shopify', 'woocommerce', 'other') NOT NULL,
     currency CHAR(3) NOT NULL,
@@ -44,47 +44,167 @@ CREATE TABLE stores (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE orders (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    store_id MEDIUMINT UNSIGNED NOT NULL,
-    external_order_id VARCHAR(128) NOT NULL,
-    order_date DATETIME NOT NULL,
-    gross_revenue DECIMAL(10,2) NOT NULL,
-    net_revenue DECIMAL(10,2) NOT NULL,
-    currency CHAR(3) NOT NULL,
-    status ENUM('pending', 'completed', 'refunded', 'cancelled') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+CREATE TABLE products (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    CONSTRAINT fk_orders_store
-        FOREIGN KEY (store_id)
-        REFERENCES stores(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+  store_id INT UNSIGNED NOT NULL,
+
+  shopify_product_id BIGINT UNSIGNED NOT NULL,
+  shopify_variant_id BIGINT UNSIGNED NOT NULL,
+
+  title VARCHAR(255) NOT NULL,
+  sku VARCHAR(100) NULL,
+
+  cogs DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  shipping_cost DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP 
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_products_store
+    FOREIGN KEY (store_id) 
+    REFERENCES stores(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT uq_store_variant
+    UNIQUE (store_id, shopify_variant_id),
+
+  INDEX idx_store_id (store_id),
+  INDEX idx_shopify_product (shopify_product_id),
+  INDEX idx_sku (sku)
+);
+
+CREATE TABLE orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  store_id INT UNSIGNED NOT NULL,
+  shopify_order_id BIGINT UNSIGNED NOT NULL,
+  order_number VARCHAR(50),
+
+  -- Revenue fields (from Shopify)
+  total_price DECIMAL(10,2) NOT NULL,           -- Shopify total_price
+  subtotal_price DECIMAL(10,2),
+  shipping_price DECIMAL(10,2) DEFAULT 0.00,
+  total_tax DECIMAL(10,2) DEFAULT 0.00,
+  total_discounts DECIMAL(10,2) DEFAULT 0.00,
+  total_refunds DECIMAL(10,2) DEFAULT 0.00,
+
+  -- Fees
+  payment_processing_fee DECIMAL(10,2) DEFAULT 0.00,
+
+  -- Status
+  financial_status VARCHAR(50),
+  
+  -- Metadata
+  currency CHAR(3) DEFAULT 'USD',
+  order_created_at DATETIME NOT NULL,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP 
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_orders_store
+    FOREIGN KEY (store_id)
+    REFERENCES stores(id)
+    ON DELETE CASCADE,
+
+  UNIQUE KEY uq_store_shopify_order (store_id, shopify_order_id),
+  INDEX idx_store_id (store_id),
+  INDEX idx_order_created_at (order_created_at),
+  INDEX idx_financial_status (financial_status)
 );
 
 CREATE TABLE order_items (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    order_id BIGINT UNSIGNED NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
-    sku VARCHAR(128) NULL,
-    quantity INT UNSIGNED NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    CONSTRAINT fk_order_items_order
-        FOREIGN KEY (order_id)
-        REFERENCES orders(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+  order_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NOT NULL,
+
+  quantity INT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  line_revenue DECIMAL(10,2) NOT NULL,
+  unit_cogs DECIMAL(10,2) NOT NULL,
+  unit_shipping_cost DECIMAL(10,2) DEFAULT 0.00,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_order_items_order
+    FOREIGN KEY (order_id)
+    REFERENCES orders(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_order_items_product
+    FOREIGN KEY (product_id)
+    REFERENCES products(id)
+    ON DELETE CASCADE,
+
+  INDEX (order_id),
+  INDEX (product_id)
+);
+
+CREATE TABLE ad_platforms (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE ad_accounts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  store_id INT UNSIGNED NOT NULL,
+  ad_platform_id INT UNSIGNED NOT NULL,
+
+  external_account_id VARCHAR(100) NOT NULL,
+  account_name VARCHAR(255),
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_ad_account_store
+    FOREIGN KEY (store_id)
+    REFERENCES stores(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_ad_account_platform
+    FOREIGN KEY (ad_platform_id)
+    REFERENCES ad_platforms(id)
+    ON DELETE CASCADE,
+
+  INDEX (store_id)
+);
+
+CREATE TABLE ad_spend_daily (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  store_id INT UNSIGNED NOT NULL,
+  ad_platform_id INT UNSIGNED NOT NULL,
+
+  date DATE NOT NULL,
+  spend DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  impressions INT DEFAULT 0,
+  clicks INT DEFAULT 0,
+  conversions INT DEFAULT 0,
+  revenue_attributed DECIMAL(10,2) DEFAULT 0.00,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_ad_spend_store
+    FOREIGN KEY (store_id)
+    REFERENCES stores(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_ad_spend_platform
+    FOREIGN KEY (ad_platform_id)
+    REFERENCES ad_platforms(id)
+    ON DELETE CASCADE,
+
+  UNIQUE (store_id, ad_platform_id, date),
+  INDEX (store_id),
+  INDEX (date)
 );
 
 CREATE TABLE payouts (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    store_id MEDIUMINT UNSIGNED NOT NULL,
+    store_id INT UNSIGNED NOT NULL,
     provider ENUM('stripe', 'paypal', 'shopify') NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     payout_date DATE NOT NULL,
@@ -100,68 +220,31 @@ CREATE TABLE payouts (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ad_spend (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    store_id MEDIUMINT UNSIGNED NOT NULL,
-    platform ENUM('facebook', 'google', 'other') NOT NULL,
-    date DATE NOT NULL,
-    spend DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+CREATE TABLE daily_profit_metrics (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    CONSTRAINT fk_ad_spend_store
-        FOREIGN KEY (store_id)
-        REFERENCES stores(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
-);
+  store_id INT UNSIGNED NOT NULL,
+  date DATE NOT NULL,
 
-CREATE TABLE inventory (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    store_id MEDIUMINT UNSIGNED NOT NULL,
-    sku VARCHAR(128) NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
-    stock_on_hand INT UNSIGNED NOT NULL DEFAULT 0,
-    reorder_threshold INT UNSIGNED NOT NULL DEFAULT 0,
-    cost_per_unit DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+  total_revenue DECIMAL(12,2) NOT NULL,
+  total_cogs DECIMAL(12,2) NOT NULL,
+  total_shipping DECIMAL(12,2) NOT NULL,
+  total_processing_fees DECIMAL(12,2) NOT NULL,
+  total_refunds DECIMAL(12,2) NOT NULL,
+  total_ad_spend DECIMAL(12,2) NOT NULL,
 
-    CONSTRAINT fk_inventory_store
-        FOREIGN KEY (store_id)
-        REFERENCES stores(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
+  net_profit DECIMAL(12,2) NOT NULL,
+  blended_roas DECIMAL(10,4),
+  breakeven_roas DECIMAL(10,4),
 
-);
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE INDEX idx_inventory_store_sku
-    ON inventory (store_id, sku);
+  CONSTRAINT fk_profit_store
+    FOREIGN KEY (store_id)
+    REFERENCES stores(id)
+    ON DELETE CASCADE,
 
-CREATE TABLE daily_financials (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    store_id MEDIUMINT UNSIGNED NOT NULL,
-    date DATE NOT NULL,
-    revenue DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    cash_in DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    cash_out DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    ad_spend DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    net_cash_flow DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-
-    CONSTRAINT fk_daily_financials_store
-        FOREIGN KEY (store_id)
-        REFERENCES stores(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE,
-    
-    -- Indexes for performance
-    INDEX `idx_store_date` (`store_id`, `date`),
-    INDEX `idx_deleted_at` (`deleted_at`),
-
-    UNIQUE KEY unique_store_date (store_id, date)
+  UNIQUE (store_id, date),
+  INDEX (store_id),
+  INDEX (date)
 );

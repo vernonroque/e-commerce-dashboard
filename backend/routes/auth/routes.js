@@ -106,11 +106,11 @@ authRouter.post('/login', async (req,res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      res.json({ message: "Login successful" });
+      res.json({ok:true, message: "Login successful" });
 
     }
     else{
-      res.send('Incorrect Password');
+      res.json({ok:false, message:'Incorrect Password'});
     }
 
   }catch(error){

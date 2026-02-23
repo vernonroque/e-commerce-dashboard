@@ -14,91 +14,77 @@ VALUES
 ('Diana', 'Prince', 'diana.prince@example.com', '$2b$10$33FEfRLEZJMnqGtRTZvMse8t9ylDNLZm0hzf.51C7dOqC/dKBUsrW'),
 ('Steve', 'Rogers', 'steve.rogers@example.com', '$2b$10$18Yoe.L5W.ACtKNXLfMLyeInsSRtEDHTTkN5luTrdMRJuQeGo2r4i');
 
-
 INSERT INTO stores (user_id, name, platform, currency, timezone)
 VALUES
-(1, 'Vinyl Vibes Music Store', 'shopify', 'USD', 'America/New_York'),
-(1, 'Urban Threads Clothing', 'woocommerce', 'USD', 'America/Los_Angeles'),
-(1, 'Roast House Coffee', 'shopify', 'USD', 'America/Chicago');
+(1, 'Beam Fitness', 'shopify', 'USD', 'America/New_York'),
+(2, 'Doe Supplements', 'shopify', 'USD', 'America/Los_Angeles'),
+(3, 'Smith Apparel', 'shopify', 'USD', 'America/Chicago');
 
-INSERT INTO orders (store_id, external_order_id, order_date, gross_revenue, net_revenue, currency, status)
+INSERT INTO products 
+(store_id, shopify_product_id, shopify_variant_id, title, sku, cogs, shipping_cost)
 VALUES
--- Music store
-(1, 'MUSIC-1001', '2026-02-01 10:15:00', 59.99, 54.99, 'USD', 'completed'),
-(1, 'MUSIC-1002', '2026-02-02 14:40:00', 29.99, 27.99, 'USD', 'completed'),
+(1, 100001, 1000011, 'Adjustable Dumbbell Set', 'DB-SET-01', 45.00, 8.00),
+(1, 100002, 1000021, 'Resistance Bands Pack', 'RB-PACK-01', 8.00, 2.00),
 
--- Clothing store
-(2, 'CLOTH-2001', '2026-02-01 12:05:00', 120.00, 110.00, 'USD', 'completed'),
-(2, 'CLOTH-2002', '2026-02-02 16:20:00', 75.00, 68.00, 'USD', 'completed'),
+(2, 200001, 2000011, 'Whey Protein 2lb', 'WP-2LB-01', 18.00, 4.00),
+(2, 200002, 2000021, 'Pre-Workout Mix', 'PW-01', 12.00, 3.00),
 
--- Coffee store
-(3, 'COFFEE-3001', '2026-02-01 09:30:00', 45.00, 42.00, 'USD', 'completed'),
-(3, 'COFFEE-3002', '2026-02-02 11:10:00', 90.00, 85.00, 'USD', 'completed');
+(3, 300001, 3000011, 'Performance Hoodie', 'HOOD-01', 22.00, 5.00),
+(3, 300002, 3000021, 'Athletic Shorts', 'SHORT-01', 14.00, 4.00);
 
-INSERT INTO order_items (order_id, product_name, sku, quantity, price)
+INSERT INTO orders
+(store_id, shopify_order_id, order_number, total_price, subtotal_price, shipping_price,
+ total_tax, total_discounts, total_refunds, payment_processing_fee,
+ financial_status, currency, order_created_at)
 VALUES
--- Music
-(1, 'Vinyl Record - Jazz Classics', 'VINYL-JAZZ', 1, 59.99),
-(2, 'Band T-Shirt', 'TEE-BAND', 1, 29.99),
+(1, 500001, 'BF-1001', 120.00, 110.00, 10.00, 0.00, 0.00, 0.00, 3.50, 'paid', 'USD', '2026-02-15 10:00:00'),
+(2, 600001, 'DS-2001', 75.00, 70.00, 5.00, 0.00, 0.00, 0.00, 2.20, 'paid', 'USD', '2026-02-15 12:00:00'),
+(3, 700001, 'SA-3001', 95.00, 90.00, 5.00, 0.00, 5.00, 0.00, 2.80, 'paid', 'USD', '2026-02-15 14:00:00');
 
--- Clothing
-(3, 'Hoodie - Black', 'HOODIE-BLK', 2, 60.00),
-(4, 'Baseball Cap', 'CAP-URBAN', 1, 75.00),
-
--- Coffee
-(5, 'Whole Bean Coffee - Dark Roast', 'COFFEE-DARK', 2, 22.50),
-(6, 'Espresso Blend 1lb', 'ESPRESSO-1LB', 3, 30.00);
-
-INSERT INTO payouts (store_id, provider, amount, payout_date, status)
+INSERT INTO order_items
+(order_id, product_id, quantity, price, line_revenue, unit_cogs, unit_shipping_cost)
 VALUES
--- Music
-(1, 'shopify', 82.98, '2026-02-04', 'paid'),
+-- Beam Fitness order
+(1, 1, 1, 110.00, 110.00, 45.00, 8.00),
 
--- Clothing
-(2, 'paypal', 178.00, '2026-02-05', 'pending'),
+-- Doe Supplements order
+(2, 3, 2, 35.00, 70.00, 18.00, 4.00),
 
--- Coffee
-(3, 'stripe', 127.00, '2026-02-03', 'paid');
+-- Smith Apparel order
+(3, 5, 1, 90.00, 90.00, 22.00, 5.00);
 
-INSERT INTO ad_spend (store_id, platform, date, spend)
+INSERT INTO ad_platforms (name)
 VALUES
--- Music
-(1, 'facebook', '2026-02-01', 15.00),
-(1, 'google', '2026-02-02', 20.00),
+('facebook'),
+('google'),
+('instagram');
 
--- Clothing
-(2, 'facebook', '2026-02-01', 50.00),
-(2, 'google', '2026-02-02', 40.00),
-
--- Coffee
-(3, 'facebook', '2026-02-01', 25.00),
-(3, 'google', '2026-02-02', 30.00);
-
-INSERT INTO inventory (store_id, sku, product_name, stock_on_hand, reorder_threshold, cost_per_unit)
+INSERT INTO ad_accounts
+(store_id, ad_platform_id, external_account_id, account_name)
 VALUES
--- Music
-(1, 'VINYL-JAZZ', 'Vinyl Record - Jazz Classics', 120, 30, 18.00),
-(1, 'TEE-BAND', 'Band T-Shirt', 200, 50, 8.00),
+(1, 1, 'fb_acc_001', 'Beam FB Account'),
+(2, 2, 'gg_acc_002', 'Doe Google Ads'),
+(3, 1, 'fb_acc_003', 'Smith FB Account');
 
--- Clothing
-(2, 'HOODIE-BLK', 'Hoodie - Black', 80, 20, 25.00),
-(2, 'CAP-URBAN', 'Baseball Cap', 150, 40, 10.00),
-
--- Coffee
-(3, 'COFFEE-DARK', 'Whole Bean Coffee - Dark Roast', 300, 100, 7.50),
-(3, 'ESPRESSO-1LB', 'Espresso Blend 1lb', 180, 60, 9.00);
-
-INSERT INTO daily_financials
-(store_id, date, revenue, cash_in, cash_out, ad_spend, net_cash_flow)
+INSERT INTO ad_spend_daily
+(store_id, ad_platform_id, date, spend, impressions, clicks, conversions, revenue_attributed)
 VALUES
--- Music
-(1, '2026-02-01', 59.99, 0.00, 0.00, 15.00, -15.00),
-(1, '2026-02-02', 29.99, 82.98, 0.00, 20.00, 62.98),
+(1, 1, '2026-02-15', 50.00, 10000, 400, 10, 150.00),
+(2, 2, '2026-02-15', 30.00, 8000, 300, 8, 90.00),
+(3, 1, '2026-02-15', 40.00, 9000, 350, 9, 120.00);
 
--- Clothing
-(2, '2026-02-01', 120.00, 0.00, 0.00, 50.00, -50.00),
-(2, '2026-02-02', 75.00, 0.00, 0.00, 40.00, -40.00),
+INSERT INTO payouts
+(store_id, provider, amount, payout_date, status)
+VALUES
+(1, 'stripe', 500.00, '2026-02-16', 'paid'),
+(2, 'shopify', 300.00, '2026-02-16', 'paid'),
+(3, 'paypal', 400.00, '2026-02-16', 'pending');
 
--- Coffee
-(3, '2026-02-01', 45.00, 127.00, 0.00, 25.00, 102.00),
-(3, '2026-02-02', 90.00, 0.00, 0.00, 30.00, -30.00);
+INSERT INTO daily_profit_metrics
+(store_id, date, total_revenue, total_cogs, total_shipping,
+ total_processing_fees, total_refunds, total_ad_spend,
+ net_profit, blended_roas, breakeven_roas)
+VALUES
+(1, '2026-02-15', 120.00, 45.00, 8.00, 3.50, 0.00, 50.00, 13.50, 2.40, 1.85),
+(2, '2026-02-15', 75.00, 36.00, 8.00, 2.20, 0.00, 30.00, -1.20, 2.50, 2.10),
+(3, '2026-02-15', 95.00, 22.00, 5.00, 2.80, 0.00, 40.00, 25.20, 2.38, 1.60);

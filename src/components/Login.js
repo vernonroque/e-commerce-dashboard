@@ -23,8 +23,9 @@ function Login() {
                     credentials: 'include',
                     body: JSON.stringify(data),
                 });
+                const jsonResponse = await response.json();
 
-                if (response.status === 401) {
+                if (jsonResponse.status === 401) {
                     await fetch('http://localhost:8080/api/auth/refresh', {
                         method: 'POST',
                         headers: {
@@ -33,13 +34,13 @@ function Login() {
                         credentials: 'include'
                     });
                 }
+                console.log("The response in Login component is >>>", jsonResponse);
         
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('Error:', errorData);
+                if (!jsonResponse.ok) {
+                    console.error('Error:', jsonResponse);
                 } else {
-                    const responseData = await response.json();
-                    console.log('Success:', responseData);
+                    
+                    console.log('Success:', jsonResponse);
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
