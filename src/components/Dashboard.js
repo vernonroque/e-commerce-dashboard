@@ -5,9 +5,10 @@ import MainContent from './MainContent.js';
 import React, {useState,useEffect} from 'react';
 import apiFetch from '../services/apiFetch.js'
 
-function Dashboard() {
+function Dashboard({ compare, setCompare }) {
 
     // const [success, setSuccess] = useState(false);
+    console.log("Dashboard setCompare:", setCompare);
     
     useEffect(() => {
         
@@ -47,7 +48,7 @@ function Dashboard() {
 
             <div className="dashboardBody">
                 <Sidebar />
-                <MainContent />
+                <MainContent compare={compare} setCompare={setCompare} />
             </div>
         </div>
     );

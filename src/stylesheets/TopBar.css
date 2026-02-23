@@ -1,0 +1,14 @@
+.TopBar {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.dropdown, .toggle {
+  padding: 10px 15px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}

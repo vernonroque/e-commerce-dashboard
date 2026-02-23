@@ -1,6 +1,6 @@
 .dashboardBody{
     display:grid;
-    grid-template-columns: 30% 70%;
+    grid-template-columns: 10% 90%;
     padding: 10px;
     border: 2px red solid;
 
