@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import '../stylesheets/MetricsPanel.css';
+import apiFetch from '../services/apiFetch.js'
 
 const metricsData = [
   { name: "NET PROFIT", value: "$25,000" },
@@ -11,6 +12,39 @@ const metricsData = [
 ];
 
 function MetricsPanel() {
+
+   useEffect(() => {
+        
+        const fetchRevenue = async () => {
+           
+          const url = 'http://localhost:8080/api/dashboard/metrics/revenue';
+          const options = {
+                method: "GET",
+          }
+
+          const response = await apiFetch(url,options)
+          console.log("The raw response >>>", response);
+          
+          if (!response) return;
+
+          if (!response.ok) {
+              console.log("Request failed:", response.status);
+              return;
+          }
+
+          try{
+              const jsonResponse = await response.json();
+              console.log("This is the jsonResponse >>>", jsonResponse);
+          }catch(error){
+              console.log("there is an error >>>", error);
+          }
+        
+        };
+
+        fetchRevenue();
+
+    },[]);
+
   return (
     <div className="metrics-grid">
       {metricsData.map((m) => (

@@ -13,7 +13,6 @@ import ScalingSignal from './ScalingSignal';
 // import InventoryAlerts from './InventoryAlerts';
 
 function MainContent({compare, setCompare}){
-    console.log("MainContent setCompare:", setCompare);
 
     return(
         <div className = "MainContent">
