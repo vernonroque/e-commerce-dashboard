@@ -6,6 +6,7 @@ import React, {useState,useEffect} from 'react';
 import apiFetch from '../services/apiFetch.js'
 
 function Dashboard({ compare, setCompare }) {
+    const [stores, setStores] = useState([]);
     
     useEffect(() => {
         
@@ -28,7 +29,7 @@ function Dashboard({ compare, setCompare }) {
 
             try{
                 const jsonResponse = await response.json();
-                console.log("This is the jsonResponse >>>", jsonResponse);
+                console.log("This is the list of summaries >>>", jsonResponse);
             }catch(error){
                 console.log("there is an error >>>", error);
             }
@@ -39,13 +40,44 @@ function Dashboard({ compare, setCompare }) {
 
     },[]);
 
+    useEffect(()=> {
+        const fetchStores = async () => {
+            const baseURL ='http://localhost:8080/api/dashboard/stores';
+
+            const apiEndpoint = `${baseURL}`;
+            const options = {
+                    method: "GET",
+                }
+            // i need to modify with this apiFetch wrapper below
+            const response = await apiFetch(apiEndpoint,options)
+
+            if (!response) return;
+
+            if (!response.ok) {
+                console.log("Request failed:", response.status);
+                return;
+            }
+
+            try{
+                const jsonResponse = await response.json();
+                console.log("This is the list of stores >>>", jsonResponse);
+                setStores(jsonResponse);
+            }catch(error){
+                console.log("there is an error >>>", error);
+            }
+        }
+
+        fetchStores();
+
+    },[])
+
     return (
         <div className="dashboardContent">
             <Navbar />
 
             <div className="dashboardBody">
                 <Sidebar />
-                <MainContent compare={compare} setCompare={setCompare} />
+                <MainContent compare={compare} setCompare={setCompare} stores={stores} />
             </div>
         </div>
     );

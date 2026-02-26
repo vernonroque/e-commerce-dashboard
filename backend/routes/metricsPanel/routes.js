@@ -1,6 +1,6 @@
 //file for metrics panel routes and db querying
 const express = require('express');
-const db = require('../../../db');
+const db = require('../../db');
 const metricsRouter = express.Router();
 
 metricsRouter.get('/revenue', async(req,res)=> {

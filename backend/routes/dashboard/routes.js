@@ -17,7 +17,6 @@ dashboardRouter.get('/', async (req,res) => {
     // console.log("The result of the query is >>>", result);
 
     const [rows] = await db.query(query);
-    // console.log("The row data type is >>", typeof rows);
 
     res.json({"rows": rows,
               "ok":true
@@ -31,7 +30,30 @@ dashboardRouter.get('/', async (req,res) => {
   }
 });
 
+dashboardRouter.get('/getDates', async (req,res) => {
+  const startDate = req.query.start;
+  const endDate = req.query.end;
 
+  console.log("The start data recieved is >>>", startDate);
+  console.log("the end date recieved is >>>", endDate);
+  res.json({
+    startDate:startDate,
+    endDate:endDate
+  });
+
+});
+
+dashboardRouter.get("/stores", async (req, res) => {
+  const userId = req.user.id;   // 👈 THIS is your id
+  console.log("The users id after requesting stores >>>", userId);
+
+  const [stores] = await db.query(
+    "SELECT * FROM stores WHERE user_id = ?",
+    [userId]
+  );
+
+  res.json(stores);
+});
 
 dashboardRouter.get('/summary', async (req, res) => {
   // try {

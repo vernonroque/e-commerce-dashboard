@@ -2,6 +2,7 @@ import moment from "moment";
 
 export function getDateRange(type) {
     let startDate, endDate;
+    console.log("The date type passed in is >>>", type);
 
     switch (type) {
     case "today":

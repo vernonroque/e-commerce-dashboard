@@ -1,23 +1,87 @@
 import React, {useState,useEffect} from 'react'
 import '../stylesheets/TopBar.css'
 import DateRange from './DateRange';
+import apiFetch from '../services/apiFetch.js'
+import StoreSelector from './StoreSelector';
 
-function TopBar({ compare, setCompare }){
+function TopBar({ compare, setCompare, stores }){
     const [dateRange, setDateRange] = useState({});
+    const [storeSelected, setStoreSelected] = useState('');
+
+    console.log("The dateRange is now >>>", dateRange);
 
     useEffect(() => {
-        if (!dateRange.startDate) return;
 
-        fetch(`/api/dashboard?start=${dateRange.startDate}&end=${dateRange.endDate}`)
-        .then(res => res.json())
-        .then(data => {
-            console.log("Dashboard data:", data);
-        });
+        const fetchDates = async() =>{
+
+            if (!dateRange.startDate) return;
+            const baseURL ='http://localhost:8080/api/dashboard/getDates';
+            const queries = `start=${dateRange.startDate}&end=${dateRange.endDate}`;
+
+            const apiEndpoint = `${baseURL}?${queries}`;
+            const options = {
+                    method: "GET",
+                }
+
+            // i need to modify with this apiFetch wrapper below
+            const response = await apiFetch(apiEndpoint,options)
+
+             
+            if (!response) return;
+
+            if (!response.ok) {
+                console.log("Request failed:", response.status);
+                return;
+            }
+
+            try{
+                const jsonResponse = await response.json();
+                console.log("This is the jsonResponse >>>", jsonResponse);
+            }catch(error){
+                console.log("there is an error >>>", error);
+            }
+
+        }
+        fetchDates();
+       
+
     }, [dateRange]);
+
+    // useEffect(()=> {
+    //     const fetchStores = async () => {
+    //         if (!dateRange.startDate) return;
+    //         const baseURL ='http://localhost:8080/api/dashboard/stores';
+
+    //         const apiEndpoint = `${baseURL}`;
+    //         const options = {
+    //                 method: "GET",
+    //             }
+    //         // i need to modify with this apiFetch wrapper below
+    //         const response = await apiFetch(apiEndpoint,options)
+
+             
+    //         if (!response) return;
+
+    //         if (!response.ok) {
+    //             console.log("Request failed:", response.status);
+    //             return;
+    //         }
+
+    //         try{
+    //             const jsonResponse = await response.json();
+    //             console.log("This is the jsonResponse >>>", jsonResponse);
+    //         }catch(error){
+    //             console.log("there is an error >>>", error);
+    //         }
+    //     }
+
+    //     fetchStores();
+
+    // },[])
 
     return(
         <div className = "TopBar">
-            <div className="dropdown">Store Selector ▼</div>
+            <StoreSelector stores={stores}/>
             <DateRange onChange={setDateRange}/>
             <label className="toggle">
                 <input

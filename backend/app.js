@@ -52,10 +52,9 @@ function authenticateToken(req,res,next){
 }
 
 // ROUTES get mounted here 👇
-app.get('/api/dashboard', authenticateToken, require('./routes/dashboard/routes'));
-app.get('/api/dashboard/:start/:end', require('./routes/dashboard/metricsPanel/routes'));
-app.get('/api/dashboard/metrics', require('./routes/dashboard/metricsPanel/routes'));
-app.get('/api/users', require('./routes/users/routes'));
-app.get('/api/auth', require('./routes/auth/routes'));
+app.use('/api/auth', require('./routes/auth/routes'));
+app.use('/api/dashboard', authenticateToken, require('./routes/dashboard/routes'));
+app.use('/api/metrics', require('./routes/metricsPanel/routes'));
+app.use('/api/users', require('./routes/users/routes'));
 
 module.exports = app;

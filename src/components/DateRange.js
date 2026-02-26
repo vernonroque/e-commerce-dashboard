@@ -10,6 +10,8 @@ function DateRange({ onChange }) {
     setRange(selected);
 
     const { startDate, endDate } = getDateRange(selected);
+      console.log("the start date found is >>", startDate);
+      console.log("the end date found is >>", endDate);
     onChange({ startDate, endDate });
   };
 

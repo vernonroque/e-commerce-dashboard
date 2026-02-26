@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useState,useEffect} from 'react'
 import '../stylesheets/MainContent.css'
 import TopBar from './TopBar';
 import MetricsPanel from './MetricsPanel';
@@ -12,11 +12,11 @@ import ScalingSignal from './ScalingSignal';
 // import PayoutsTable from './PayoutsTable';
 // import InventoryAlerts from './InventoryAlerts';
 
-function MainContent({compare, setCompare}){
+function MainContent({compare, setCompare, stores}){
 
     return(
         <div className = "MainContent">
-            <TopBar compare={compare} setCompare={setCompare} />
+            <TopBar compare={compare} setCompare={setCompare} stores={stores} />
             <MetricsPanel />
             <ProfitChart />
             <UnitEconomics />
