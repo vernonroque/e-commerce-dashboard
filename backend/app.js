@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 
 // global middleware
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-console.log("frontend origin is >>>", FRONTEND_ORIGIN);
+// console.log("frontend origin is >>>", FRONTEND_ORIGIN);
 app.use(cors({
     origin: FRONTEND_ORIGIN , // your frontend origin (set via FRONTEND_ORIGIN)
     credentials: true
@@ -54,7 +54,7 @@ function authenticateToken(req,res,next){
 // ROUTES get mounted here 👇
 app.use('/api/auth', require('./routes/auth/routes'));
 app.use('/api/dashboard', authenticateToken, require('./routes/dashboard/routes'));
-app.use('/api/metrics', require('./routes/metricsPanel/routes'));
+app.use('/api/metrics', authenticateToken, require('./routes/metricsPanel/routes'));
 app.use('/api/users', require('./routes/users/routes'));
 
 module.exports = app;

@@ -18,7 +18,8 @@ INSERT INTO stores (user_id, name, platform, currency, timezone)
 VALUES
 (1, 'Beam Fitness', 'shopify', 'USD', 'America/New_York'),
 (2, 'Doe Supplements', 'shopify', 'USD', 'America/Los_Angeles'),
-(3, 'Smith Apparel', 'shopify', 'USD', 'America/Chicago');
+(3, 'Smith Apparel', 'shopify', 'USD', 'America/Chicago'),
+(1, 'Jims Music', 'shopify', 'USD', 'America/New_York');
 
 INSERT INTO products 
 (store_id, shopify_product_id, shopify_variant_id, title, sku, cogs, shipping_cost)

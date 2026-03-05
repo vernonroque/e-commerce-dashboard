@@ -7,6 +7,8 @@ import apiFetch from '../services/apiFetch.js'
 
 function Dashboard({ compare, setCompare }) {
     const [stores, setStores] = useState([]);
+    const [selStore, setSelStore] = useState(stores[0]);
+    console.log("The current selected store is >>>", selStore);
     
     useEffect(() => {
         
@@ -18,7 +20,6 @@ function Dashboard({ compare, setCompare }) {
             }
 
             const response = await apiFetch(url,options)
-            console.log("The raw response >>>", response);
             
             if (!response) return;
 
@@ -77,7 +78,7 @@ function Dashboard({ compare, setCompare }) {
 
             <div className="dashboardBody">
                 <Sidebar />
-                <MainContent compare={compare} setCompare={setCompare} stores={stores} />
+                <MainContent compare={compare} setCompare={setCompare} stores={stores} selStore={selStore} setSelStore={setSelStore} />
             </div>
         </div>
     );

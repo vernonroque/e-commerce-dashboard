@@ -13,37 +13,37 @@ const metricsData = [
 
 function MetricsPanel() {
 
-  //  useEffect(() => {
+   useEffect(() => {
         
-  //       const fetchRevenue = async () => {
+        const fetchRevenue = async () => {
            
-  //         const url = 'http://localhost:8080/api/dashboard/metrics/revenue';
-  //         const options = {
-  //               method: "GET",
-  //         }
+          const url = 'http://localhost:8080/api/dashboard/metrics/revenue';
+          const options = {
+                method: "GET",
+          }
 
-  //         const response = await apiFetch(url,options)
-  //         console.log("The raw response >>>", response);
+          const response = await apiFetch(url,options)
+          console.log("The raw response >>>", response);
           
-  //         if (!response) return;
+          if (!response) return;
 
-  //         if (!response.ok) {
-  //             console.log("Request failed:", response.status);
-  //             return;
-  //         }
+          if (!response.ok) {
+              console.log("Request failed:", response.status);
+              return;
+          }
 
-  //         try{
-  //             const jsonResponse = await response.json();
-  //             console.log("This is the jsonResponse >>>", jsonResponse);
-  //         }catch(error){
-  //             console.log("there is an error >>>", error);
-  //         }
+          try{
+              const jsonResponse = await response.json();
+              console.log("This is the jsonResponse >>>", jsonResponse);
+          }catch(error){
+              console.log("there is an error >>>", error);
+          }
         
-  //       };
+        };
 
-  //       fetchRevenue();
+        fetchRevenue();
 
-  //   },[]);
+    },[]);
 
   return (
     <div className="metrics-grid">

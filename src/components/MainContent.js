@@ -12,15 +12,15 @@ import ScalingSignal from './ScalingSignal';
 // import PayoutsTable from './PayoutsTable';
 // import InventoryAlerts from './InventoryAlerts';
 
-function MainContent({compare, setCompare, stores}){
+function MainContent({compare, setCompare, stores, selStore, setSelStore}){
 
     return(
         <div className = "MainContent">
-            <TopBar compare={compare} setCompare={setCompare} stores={stores} />
+            <TopBar compare={compare} setCompare={setCompare} stores={stores} selStore={selStore} setSelStore={setSelStore} />
             <MetricsPanel />
             <ProfitChart />
             <UnitEconomics />
-            <ProductTable />
+            {/* <ProductTable /> */}
             <AdBreakdown />
             <ScalingSignal />
         </div>

@@ -10,8 +10,6 @@ import Signup from './components/Signup';
 function App() {
   const [compare, setCompare] = useState(false);
 
-  console.log("compare:", compare);
-    console.log("setCompare:", setCompare);
   return (
     
     <Router>

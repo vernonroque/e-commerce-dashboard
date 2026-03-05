@@ -11,14 +11,12 @@ function hashToken(token) {
 }
 
 const isProduction = process.env.NODE_ENV === "production";
-console.log("The isProduction boolean is >>>", isProduction);
 
 authRouter.get('/', async (req, res) => { 
     res.json({"message":"This is the general auth section"});
 });
 
 authRouter.post('/register', async (req, res) => {
-  console.log("Endpoint to register is hit");
   try {
     const { firstname, lastname, email, password } = req.body;
     
@@ -33,8 +31,6 @@ authRouter.post('/register', async (req, res) => {
     // TODO: Hash password with bcrypt before storing
     const query = 'INSERT INTO users (first_name,last_name, email, password_hash) VALUES (?, ?, ?, ?)';
     const [results] = await db.query(query, [firstname,lastname, email, hashedPassword]);
-    console.log("The results are >>>", results);
-
 
     res.status(201).json({ message: 'User registered', userId: results.insertId });
   } catch (error) {
@@ -57,14 +53,11 @@ authRouter.post('/login', async (req,res) => {
     //I have to query the database of users
     const query = 'SELECT * from users where deleted_at is null';
     const [results] = await db.query(query);
-    // console.log("The total list of users >>>", results);
     const user = results.find( item => item.email === req.body.email);
-    console.log("The found user is >>>", user);
 
     if(!user){
       return res.status(400).json({ error: 'Cannot Find User' });
     }
-    console.log("req.body:", req.body);
 
 
     const isSame = await bcrypt.compare(req.body.password, user.password_hash);

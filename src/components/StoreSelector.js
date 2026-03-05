@@ -1,7 +1,12 @@
 import '../stylesheets/StoreSelector.css'
 
-function StoreSelector({stores}){
+function StoreSelector({stores, selStore, setSelStore}){
     const storeList = [];
+
+        const handleChange = (e) => {
+        const selected = e.target.value;
+        setSelStore(selected);
+        }
 
     for(const key in stores){
         storeList.push(stores[key].name);
@@ -9,7 +14,8 @@ function StoreSelector({stores}){
 
     return(
         <div className = "StoreSelector">
-            <select value='' onChange=''>
+            <select value={selStore || ''} onChange={handleChange}>
+                <option key='default' value=''>Select Store</option>
                 {
                     storeList.map((item, index) => (    
                         <option key={index} value={item}>{item}</option>
@@ -18,7 +24,6 @@ function StoreSelector({stores}){
                 }
             </select>
         </div>
-
     );
 
 }

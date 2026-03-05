@@ -34,8 +34,6 @@ dashboardRouter.get('/getDates', async (req,res) => {
   const startDate = req.query.start;
   const endDate = req.query.end;
 
-  console.log("The start data recieved is >>>", startDate);
-  console.log("the end date recieved is >>>", endDate);
   res.json({
     startDate:startDate,
     endDate:endDate
@@ -45,7 +43,6 @@ dashboardRouter.get('/getDates', async (req,res) => {
 
 dashboardRouter.get("/stores", async (req, res) => {
   const userId = req.user.id;   // 👈 THIS is your id
-  console.log("The users id after requesting stores >>>", userId);
 
   const [stores] = await db.query(
     "SELECT * FROM stores WHERE user_id = ?",
