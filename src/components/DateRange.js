@@ -5,6 +5,13 @@ import {getDateRange} from '../utils/dateRange';
 function DateRange({ onChange }) {
   const [range, setRange] = useState("last_30_days");
 
+  useEffect(()=> {
+    const { startDate, endDate } = getDateRange(range);
+    onChange({ startDate, endDate });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[])
+
   const handleChange = (e) => {
     const selected = e.target.value;
     setRange(selected);

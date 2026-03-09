@@ -8,38 +8,39 @@ import apiFetch from '../services/apiFetch.js'
 function Dashboard({ compare, setCompare }) {
     const [stores, setStores] = useState([]);
     const [selStore, setSelStore] = useState(stores[0]);
-    console.log("The current selected store is >>>", selStore);
+    // console.log("The list of stores is >>>", stores);
+    // console.log("The current selected store is >>>", selStore);
     
-    useEffect(() => {
+    // useEffect(() => {
         
-        const fetchSummary = async () => {
+    //     const fetchSummary = async () => {
            
-            const url = 'http://localhost:8080/api/dashboard';
-            const options = {
-                 method: "GET",
-            }
+    //         const url = 'http://localhost:8080/api/dashboard';
+    //         const options = {
+    //              method: "GET",
+    //         }
 
-            const response = await apiFetch(url,options)
+    //         const response = await apiFetch(url,options)
             
-            if (!response) return;
+    //         if (!response) return;
 
-            if (!response.ok) {
-                console.log("Request failed:", response.status);
-                return;
-            }
+    //         if (!response.ok) {
+    //             console.log("Request failed:", response.status);
+    //             return;
+    //         }
 
-            try{
-                const jsonResponse = await response.json();
-                console.log("This is the list of summaries >>>", jsonResponse);
-            }catch(error){
-                console.log("there is an error >>>", error);
-            }
+    //         try{
+    //             const jsonResponse = await response.json();
+    //             console.log("This is the list of summaries >>>", jsonResponse);
+    //         }catch(error){
+    //             console.log("there is an error >>>", error);
+    //         }
         
-        };
+    //     };
 
-        fetchSummary();
+    //     fetchSummary();
 
-    },[]);
+    // },[]);
 
     useEffect(()=> {
         const fetchStores = async () => {
@@ -61,7 +62,8 @@ function Dashboard({ compare, setCompare }) {
 
             try{
                 const jsonResponse = await response.json();
-                console.log("This is the list of stores >>>", jsonResponse);
+
+                //jsonResponse is an array of object of the stores 
                 setStores(jsonResponse);
             }catch(error){
                 console.log("there is an error >>>", error);
@@ -72,13 +74,25 @@ function Dashboard({ compare, setCompare }) {
 
     },[])
 
+    useEffect(() => {
+        if (stores.length > 0) {
+            console.log("The store selected by default is >>>", stores[0]);
+            setSelStore(stores[0]);
+        }
+    }, [stores]);
+
     return (
         <div className="dashboardContent">
             <Navbar />
 
             <div className="dashboardBody">
                 <Sidebar />
-                <MainContent compare={compare} setCompare={setCompare} stores={stores} selStore={selStore} setSelStore={setSelStore} />
+                <MainContent compare={compare} 
+                            setCompare={setCompare} 
+                            stores={stores} 
+                            selStore={selStore} 
+                            setSelStore={setSelStore} 
+                />
             </div>
         </div>
     );

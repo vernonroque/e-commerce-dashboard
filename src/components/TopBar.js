@@ -4,8 +4,9 @@ import DateRange from './DateRange';
 import apiFetch from '../services/apiFetch.js'
 import StoreSelector from './StoreSelector';
 
-function TopBar({ compare, setCompare, stores, selStore, setSelStore }){
-    const [dateRange, setDateRange] = useState({});
+function TopBar({ compare, setCompare, stores, selStore, setSelStore,dateRange, setDateRange }){
+    // const [dateRange, setDateRange] = useState({});
+    // console.log("the current date range is >>>", dateRange);
 
     useEffect(() => {
 
@@ -78,7 +79,10 @@ function TopBar({ compare, setCompare, stores, selStore, setSelStore }){
 
     return(
         <div className = "TopBar">
-            <StoreSelector stores={stores} selStore={selStore} setSelStore={setSelStore}/>
+            <StoreSelector stores={stores} 
+                        selStore={selStore} 
+                        setSelStore={setSelStore}
+            />
             <DateRange onChange={setDateRange}/>
             <label className="toggle">
                 <input

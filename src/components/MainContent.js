@@ -13,11 +13,25 @@ import ScalingSignal from './ScalingSignal';
 // import InventoryAlerts from './InventoryAlerts';
 
 function MainContent({compare, setCompare, stores, selStore, setSelStore}){
-
+    const [dateRange, setDateRange] = useState({});
+    // console.log("In mainContent component")
+    // console.log("the current date range is >>>", dateRange);
+    // console.log("The current selectedStore is >>>", selStore);
+    // console.log("--------------------");
+    
     return(
         <div className = "MainContent">
-            <TopBar compare={compare} setCompare={setCompare} stores={stores} selStore={selStore} setSelStore={setSelStore} />
-            <MetricsPanel />
+            <TopBar compare={compare} 
+                    setCompare={setCompare} 
+                    stores={stores} 
+                    selStore={selStore} 
+                    setSelStore={setSelStore} 
+                    dateRange={dateRange}
+                    setDateRange={setDateRange}
+            />
+            <MetricsPanel dateRange={dateRange}
+                        selStore={selStore}
+            />
             <ProfitChart />
             <UnitEconomics />
             {/* <ProductTable /> */}
