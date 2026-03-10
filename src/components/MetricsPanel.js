@@ -54,7 +54,7 @@ function MetricsPanel({dateRange,selStore}) {
             console.log("This is the jsonResponse for revenue >>>", jsonResponse);
             setMetrics(prev => ({
               ...prev,
-              revenue: jsonResponse["rows"][0].revenue
+              revenue: jsonResponse["payload"].revenue
             }));
 
         }catch(error){
@@ -97,7 +97,7 @@ function MetricsPanel({dateRange,selStore}) {
             console.log("This is the jsonResponse adSpend >>>", jsonResponse);
             setMetrics(prev => ({
               ...prev,
-              adSpend: jsonResponse.rows[0].adspend
+              adSpend: jsonResponse['payload'].adspend
             }));
 
         }catch(error){
@@ -140,7 +140,7 @@ function MetricsPanel({dateRange,selStore}) {
             console.log("This is the jsonResponse netProfit >>>", jsonResponse);
             setMetrics(prev => ({
               ...prev,
-              netProfit: jsonResponse.rows[0].net_profit
+              netProfit: jsonResponse['payload'].net_profit
             }));
 
         }catch(error){
@@ -183,7 +183,7 @@ function MetricsPanel({dateRange,selStore}) {
             console.log("This is the jsonResponse contrMargin >>>", jsonResponse);
             setMetrics(prev => ({
               ...prev,
-              contrMargin: jsonResponse.rows[0].contr_margin
+              contrMargin: jsonResponse['payload'].contr_margin
             }));
 
         }catch(error){
@@ -196,19 +196,106 @@ function MetricsPanel({dateRange,selStore}) {
 
   },[selStore, dateRange]);
 
+  // api call for blended return on ad spend
+  useEffect(() => {
+      
+    const fetchBlendedROAS = async () => {
+      if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
+
+      console.log("I am in the contribution margin effect");
+      const baseUrlDev = 'http://localhost:8080';
+      const path = '/api/metrics/blended_roas'
+      const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
+      const options = {
+            method: "GET",
+      }
+
+      const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+      
+      const response = await apiFetch(apiEndpoint,options)
+
+      if (!response) return;
+
+      if (!response.ok) {
+          console.log("Request failed:", response.status);
+          return;
+      }
+
+      try{
+          const jsonResponse = await response.json();
+          console.log("This is the jsonResponse blended ROAS >>>", jsonResponse);
+          setMetrics(prev => ({
+            ...prev,
+            blendedROAS: jsonResponse['payload'].blended_roas
+          }));
+
+      }catch(error){
+          console.log("there is an error >>>", error);
+      }
+    
+    };
+
+    fetchBlendedROAS();
+
+  },[selStore, dateRange]);
+
+  // api call for blended return on ad spend
+  useEffect(() => {
+      
+    const fetchBreakevenROAS = async () => {
+
+      if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
+
+      console.log("I am in the contribution margin effect");
+      const baseUrlDev = 'http://localhost:8080';
+      const path = '/api/metrics/breakeven_roas'
+      const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
+      const options = {
+            method: "GET",
+      }
+
+      const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+      
+      const response = await apiFetch(apiEndpoint,options)
+
+      if (!response) return;
+
+      if (!response.ok) {
+          console.log("Request failed:", response.status);
+          return;
+      }
+
+      try{
+          const jsonResponse = await response.json();
+          console.log("This is the jsonResponse breakeven ROAS >>>", jsonResponse);
+          setMetrics(prev => ({
+            ...prev,
+            breakevenROAS: jsonResponse['payload'].breakeven_roas
+          }));
+
+      }catch(error){
+          console.log("there is an error >>>", error);
+      }
+    
+    };
+
+    fetchBreakevenROAS();
+
+  },[selStore, dateRange]);
+
   console.log("the metrics object up to now >>>", metrics);
   const metricsData = [
     { name: "NET PROFIT", value: metrics.netProfit },
     { name: "REVENUE", value: metrics.revenue },
     { name: "AD SPEND", value: metrics.adSpend },
-    { name: "CONTR MARGIN", value: metrics.contrMargin },
+    { name: "CONTR MARGIN", value: `${metrics.contrMargin}%` },
     { name: "BLENDED ROAS", value: metrics.blendedROAS },
     { name: "BREAKEVEN ROAS", value: metrics.breakevenROAS }
   ];
   
   return (
     <div className="metrics-grid">
-      {metricsDataDemo.map((m) => (
+      {metricsData.map((m) => (
         <div key={m.name} className="metric-card">
           <div>{m.name}</div>
           <div className="value">{m.value}</div>

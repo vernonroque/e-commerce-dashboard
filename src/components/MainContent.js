@@ -1,10 +1,10 @@
-import React, {useState,useEffect} from 'react'
+import React, {useState, useEffect} from 'react'
 import '../stylesheets/MainContent.css'
 import TopBar from './TopBar';
 import MetricsPanel from './MetricsPanel';
 import ProfitChart from './ProfitChart';
 import UnitEconomics from './UnitEconomics';
-import ProductTable from './ProductTable';
+// import ProductTable from './ProductTable';
 import AdBreakdown from './AdBreakdown';
 import ScalingSignal from './ScalingSignal';
 // import KpiSummary from './KpiSummary';

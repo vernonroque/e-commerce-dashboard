@@ -8,39 +8,6 @@ import apiFetch from '../services/apiFetch.js'
 function Dashboard({ compare, setCompare }) {
     const [stores, setStores] = useState([]);
     const [selStore, setSelStore] = useState(stores[0]);
-    // console.log("The list of stores is >>>", stores);
-    // console.log("The current selected store is >>>", selStore);
-    
-    // useEffect(() => {
-        
-    //     const fetchSummary = async () => {
-           
-    //         const url = 'http://localhost:8080/api/dashboard';
-    //         const options = {
-    //              method: "GET",
-    //         }
-
-    //         const response = await apiFetch(url,options)
-            
-    //         if (!response) return;
-
-    //         if (!response.ok) {
-    //             console.log("Request failed:", response.status);
-    //             return;
-    //         }
-
-    //         try{
-    //             const jsonResponse = await response.json();
-    //             console.log("This is the list of summaries >>>", jsonResponse);
-    //         }catch(error){
-    //             console.log("there is an error >>>", error);
-    //         }
-        
-    //     };
-
-    //     fetchSummary();
-
-    // },[]);
 
     useEffect(()=> {
         const fetchStores = async () => {
