@@ -1,7 +1,11 @@
-import React from 'react';
+import React,{useState, useEffect} from 'react';
+import { useNavigate } from "react-router-dom";
 import '../stylesheets/Signup.css';
+import OnboardStore from './OnboardStore.js';
 
 function Signup() {
+    const navigate = useNavigate();
+    const [isSignedIn, setIsSignedIn] = useState(false);
 
     const handleSubmit = (e) => {
 
@@ -28,6 +32,7 @@ function Signup() {
                 } else {
                     const responseData = await response.json();
                     console.log('Success:', responseData);
+                    setIsSignedIn(true);
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -36,6 +41,14 @@ function Signup() {
         
         fetchSearch();
     }
+    useEffect(() => {
+        // once signed in redirect to the new page which is 
+        // the store onboarding page
+        if (isSignedIn) {
+            navigate('/onboard-store');
+        }
+    },[isSignedIn,navigate])
+    
     return(
         <div className = 'signupPage'>
             <h1>This is the signup component</h1>
