@@ -248,3 +248,21 @@ CREATE TABLE daily_profit_metrics (
   INDEX (store_id),
   INDEX (date)
 );
+
+CREATE TABLE shopify_auth_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    user_id BIGINT UNSIGNED NOT NULL,
+
+    shop_domain VARCHAR(255) NOT NULL,
+    access_token VARCHAR(255) NOT NULL,
+
+    scope TEXT,
+    
+    installed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_user_shop (user_id, shop_domain),
+
+    INDEX idx_user_id (user_id)
+);
