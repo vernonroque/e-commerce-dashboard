@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../../db');
 const shopifyRouter = express.Router();
+const axios = require('axios');
 require('dotenv').config();
 
 // routes/shopifyRouter.js
@@ -11,6 +12,7 @@ shopifyRouter.post('/oauth', async (req, res) => {
     try {
         // 1. Receive the shopify store name from frontend
         const { shop } = req.body;
+        console.log("Received shop name from frontend >>>", shop);
 
         if (!shop) {
             return res.status(400).json({ message: 'Shop name is required' });
@@ -23,18 +25,39 @@ shopifyRouter.post('/oauth', async (req, res) => {
         if (!sanitizedShop) {
             return res.status(400).json({ message: 'Invalid shop domain' })
         }
+        const baseURL = `https://${sanitizedShop}.myshopify.com`
 
-        const authUrl = await shopify.auth.begin({
-            shop: sanitizedShop,
-            callbackPath: '/api/shopify/auth/callback',
-            isOnline: false, // false = permanent "offline" token for background tasks
-            rawRequest: req,
-            rawResponse: res,
-        });
+        const headers = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+	    };
+
+    const params = {
+        client_id: process.env.SHOPIFY_API_KEY,
+        redirect_uri:"http://localhost:8080/api/shopify/auth/callback"
+    }
+
+	const instance = axios.create({
+		baseURL: baseURL,
+		headers,
+		timeout: 30000
+	});
+
+        const response = await instance.get('/admin/oauth/authorize',{params});
+
+        
+
+        // const authUrl = await shopify.auth.begin({
+        //     shop: sanitizedShop,
+        //     callbackPath: '/api/shopify/auth/callback',
+        //     isOnline: false, // false = permanent "offline" token for background tasks
+        //     rawRequest: req,
+        //     rawResponse: res,
+        // });
 
         // Because this is a POST from your frontend, we send the URL 
         // back so the frontend can do: window.location.href = authUrl;
-        return res.status(200).json({ authUrl:authUrl, ok:true });
+        return res.status(200).json({ ok:true });
 
     } catch (error) {
         console.error('OAuth Init Error:', error);
