@@ -1,5 +1,6 @@
 import React,{useState, useEffect} from 'react';
 import '../stylesheets/OnboardStore.css';
+import apiFetch from '../services/apiFetch.js'
 
 function OnboardStore() {
     const handleSubmit = async(e) => {
@@ -7,24 +8,36 @@ function OnboardStore() {
         const storeName = e.target[0].value;
         console.log("The store name entered is >>>", storeName);
         // Here you would typically make an API call to connect the Shopify store using the entered store name
-
-        const response = await fetch('/api/shopify/oauth', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ storeName })
-        });
-
-        if(response.ok) {
+        const baseURL = 'http://localhost:8080';
+        const apiEndpoint = `${baseURL}/api/shopify/oauth`;
+        const options = {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'shop':storeName})
+            }
+            
+        try{
+            // const response = await fetch(`${baseURL}/api/shopify/oauth`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({'shop':storeName})
+                
+            // });
+            // i need to modify with this apiFetch wrapper below
+            const response = await apiFetch(apiEndpoint,options);
             // Handle successful connection (e.g., redirect to dashboard, show success message)
             console.log("Shopify store connected successfully");
             const data = await response.json();
+            
             window.location.href = data.authUrl;
-        } else {
-            // Handle error (e.g., show error message)
-            console.error("Failed to connect Shopify store");
-        }
+        }catch(error){
+            // Handle errors (e.g., show error message to user)
+            console.error("Error connecting Shopify store >>>", error);
+        }  
     }
 
     return(

@@ -27,3 +27,16 @@ User clicks "Install app"
 → redirect_uri (/auth/shopify/callback) [backend]
 → you exchange token
 → redirect to App URL (/app) [frontend UI]
+
+## these are the query parameters from the callback:
+
+Received callback query parameters >>> [Object: null prototype] {
+backend-api  |   code: 'b57810deb7012788a7c8511a81d0b8c6',
+backend-api  |   hmac: 'c854a208f62affdfa3fdb9580319ffd7ed201a9f23acb80b57cf22712f84f53e',
+backend-api  |   host: 'YWRtaW4uc2hvcGlmeS5jb20vc3RvcmUvc2FudGEtc2llcnJhLWNvZmZlZQ',
+backend-api  |   shop: 'santa-sierra-coffee.myshopify.com',
+backend-api  |   timestamp: '1773881442'
+backend-api  | }
+
+## access the dev db in the docker container:
+docker exec -it dev-mysql mysql -u root -p

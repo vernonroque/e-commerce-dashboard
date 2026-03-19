@@ -25,6 +25,7 @@ authRouter.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
+    // 1. Hash the password
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash( password, salt);
 
@@ -32,7 +33,52 @@ authRouter.post('/register', async (req, res) => {
     const query = 'INSERT INTO users (first_name,last_name, email, password_hash) VALUES (?, ?, ?, ?)';
     const [results] = await db.query(query, [firstname,lastname, email, hashedPassword]);
 
-    res.status(201).json({ message: 'User registered', userId: results.insertId });
+    const userId = results.insertId;
+
+    // 3. Generate Tokens (Matching your Login logic)
+    const accessToken = jwt.sign(
+      { id: userId, email: email },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' } // Changed from 15s to 15m for better UX
+    );
+
+    const refreshToken = jwt.sign(
+      { id: userId },
+      process.env.REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // 4. Store Refresh Token Hash
+    const refreshTokenHash = hashToken(refreshToken);
+    await db.query(
+      `INSERT INTO sessions (user_id, refresh_token_hash, expires_at)
+       VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))`,
+      [userId, refreshTokenHash]
+    );
+
+    // 5. Set Cookies
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 60 * 60 * 1000 // 1 hour
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    // 6. Return response with userId for your onboarding flow
+    res.status(201).json({ 
+      ok: true, 
+      message: 'User registered and logged in', 
+      userId: userId 
+    });
+
+    res.status(201).json({ message: 'User registered', userId: userId });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Email already exists' });
