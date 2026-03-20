@@ -11,7 +11,8 @@ function Dashboard({ compare, setCompare }) {
 
     useEffect(()=> {
         const fetchStores = async () => {
-            const baseURL ='http://localhost:8080/api/dashboard/stores';
+            const backendBaseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
+            const baseURL =`${backendBaseUrl}/api/dashboard/stores`;
 
             const apiEndpoint = `${baseURL}`;
             const options = {

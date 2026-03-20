@@ -97,6 +97,20 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
 
         await db.query(sql, [userId, shop, accessToken, scope]);
     }
+    async function saveStore(userId, store, currency, timezone) {
+            const sql = `
+                INSERT INTO stores (user_id, name, platform, currency, timezone)
+                VALUES (?, ?, 'shopify', ?, ?)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                platform = 'shopify',
+                currency = VALUES(currency),
+                timezone = VALUES(timezone)
+            `;
+
+            await db.query(sql, [userId, store, currency, timezone]);
+
+    }
     try {
         // Exchange the temporary code for a permanent access token
         console.log("Received callback query parameters >>>", req.query);
@@ -129,10 +143,24 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
             accessToken: encryptedToken,
             scope: scope
         });
+        // here make a shopify api call to get the currency and timezone for store
+        const storeResponse = await axios.get(`https://${shop}/admin/api/2023-04/shop.json`, {
+            headers: {
+                'X-Shopify-Access-Token': accessToken
+            }
+        });
+        console.log("Store response from Shopify >>>", storeResponse.data);
+        const storeData = storeResponse.data.shop;
+        const storeName = storeData.name;
+        const currency = storeData.currency;
+        const timezone = storeData.iana_timezone;
+
+        await saveStore(userId, storeName, currency, timezone);
 
         console.log("Shopify session saved successfully in the database");
         // const session = await shopify.auth.validateAuthCallback(req, res, req.query);
-        res.redirect('http://localhost:3000/dashboard');
+        const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+        res.redirect(`${frontendUrl}/dashboard`);
 
         // 4. Store the access token securely
         // 'session.accessToken' is what you need to save in your DB

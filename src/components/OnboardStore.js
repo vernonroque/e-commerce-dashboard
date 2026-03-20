@@ -1,4 +1,4 @@
-import React,{useState, useEffect} from 'react';
+import React from 'react';
 import '../stylesheets/OnboardStore.css';
 import apiFetch from '../services/apiFetch.js'
 
@@ -8,7 +8,7 @@ function OnboardStore() {
         const storeName = e.target[0].value;
         console.log("The store name entered is >>>", storeName);
         // Here you would typically make an API call to connect the Shopify store using the entered store name
-        const baseURL = 'http://localhost:8080';
+        const baseURL = process.env.REACT_APP_BACKEND_ORIGIN || 'http://localhost:8080';
         const apiEndpoint = `${baseURL}/api/shopify/oauth`;
         const options = {
                 method: "POST",

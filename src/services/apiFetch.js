@@ -7,8 +7,10 @@ const apiFetch = async (url, options = {}) => {
 
     if (response.status === 401) {
         // try refreshing
+        const baseURL = process.env.REACT_APP_BACKEND_ORIGIN || 'http://localhost:8080';
+        console.log("the base url in the apiFetch function is >>>", baseURL);
         console.log("I receieved a 401 response status in apiFetch");
-        const refresh = await fetch('http://localhost:8080/api/auth/refresh', {
+        const refresh = await fetch(`${baseURL}/api/auth/refresh`, {
             method: 'POST',
             credentials: 'include'
         });

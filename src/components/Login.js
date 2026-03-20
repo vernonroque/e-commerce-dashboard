@@ -13,9 +13,10 @@ function Login() {
             console.log("The form data is >>>", formData);
             const data = Object.fromEntries(formData.entries());
             console.log('Form Data in an object:', data);
+            const baseURL = process.env.REACT_APP_BACKEND_ORIGIN;
         
             try {
-                const response = await fetch('http://localhost:8080/api/auth/login', {
+                const response = await fetch(`${baseURL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -26,7 +27,7 @@ function Login() {
                 const jsonResponse = await response.json();
 
                 if (jsonResponse.status === 401) {
-                    await fetch('http://localhost:8080/api/auth/refresh', {
+                    await fetch(`${baseURL}/api/auth/refresh`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

@@ -42,19 +42,23 @@ metricsRouter.get('/adspend', async(req,res)=> {
     const { id, start, end } = req.query;
     const startDateOnly = start.split("T")[0];
     const endDateOnly = end.split("T")[0];
+    console.log("The id is >>>", id);
+    console.log("The start date is >>>", startDateOnly);
+    console.log("The end date is >>>", endDateOnly);
 
-    const query = `SELECT SUM(spend) AS adspend
+    const query = `SELECT COALESCE(SUM(spend), 0) AS adspend
                     FROM ad_spend_daily
                     WHERE date BETWEEN ? AND ?
                     AND store_id = ?;`;
     try {
         const [rows] = await db.query(query, [startDateOnly, endDateOnly, id]);
+        console.log("The rows in the ad spend route >>>", rows);
         const payload ={
             'adspend':''
         }
         const adSpend = Number(rows[0].adspend);
         const adSpendFormatted = (Math.round(adSpend * 100) / 100).toFixed(2);
-        payload['adspend'] = adSpendFormatted;
+        payload['adspend'] = adSpendFormatted ;
 
         res.json({ 'payload': payload, ok: true });
     } catch (err) {
@@ -66,15 +70,19 @@ metricsRouter.get('/adspend', async(req,res)=> {
 
 // Net Profit = Revenue - COGS - Ad Spend
 metricsRouter.get('/net_profit', async(req,res)=> {
+    console.log("I am in the net profit route");
 
     const { id, start, end } = req.query;
+    console.log("the id is >>>", id);
+    console.log("the start date is >>>", start);
+    console.log("the end date is >>>", end);
 
     const query = `
         SELECT
-            rev.revenue,
-            rev.total_cogs,
-            ads.total_adspend,
-            rev.revenue - rev.total_cogs - ads.total_adspend AS net_profit
+            COALESCE(rev.revenue, 0) AS revenue,
+            COALESCE(rev.total_cogs, 0) AS total_cogs,
+            COALESCE(ads.total_adspend, 0) AS total_adspend,
+            COALESCE(rev.revenue, 0) - COALESCE(rev.total_cogs, 0) - COALESCE(ads.total_adspend, 0) AS net_profit
         FROM
         (
             SELECT
@@ -104,12 +112,15 @@ metricsRouter.get('/net_profit', async(req,res)=> {
             end,
             id
         ]);
+        console.log("The rows in the net profit route >>>", rows[0].total_adspend);
         const payload = {
             'net_profit': ''
             
         }
         const netProfit = Number(rows[0].net_profit);
         const netProfitFormatted = (Math.round(netProfit * 100) / 100).toFixed(2);
+        console.log("The net profit from the query is >>>", netProfit);
+        console.log("-------------------------------");
         payload['net_profit'] = netProfitFormatted;
         
         res.json({ payload:payload, ok: true });
@@ -166,7 +177,7 @@ metricsRouter.get('/blended_roas', async(req,res)=> {
 
     const query = `
         SELECT
-            rev.revenue,
+            COALESCE(rev.revenue, 0) AS revenue,
             ads.total_adspend,
             rev.revenue / NULLIF(ads.total_adspend, 0) AS blended_roas
         FROM
@@ -202,6 +213,7 @@ metricsRouter.get('/blended_roas', async(req,res)=> {
         
     }
     const blendedROAS = Number(rows[0].blended_roas);
+    console.log("The blended ROAS from the query is >>>", blendedROAS);
     const blendedROASFormatted = (Math.round(blendedROAS * 100) / 100).toFixed(2);
     payload['blended_roas'] = blendedROASFormatted;
     

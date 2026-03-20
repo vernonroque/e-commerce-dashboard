@@ -34,6 +34,7 @@ authRouter.post('/register', async (req, res) => {
     const [results] = await db.query(query, [firstname,lastname, email, hashedPassword]);
 
     const userId = results.insertId;
+    console.log("The new user id is >>>", results.insertId);
 
     // 3. Generate Tokens (Matching your Login logic)
     const accessToken = jwt.sign(
@@ -78,7 +79,7 @@ authRouter.post('/register', async (req, res) => {
       userId: userId 
     });
 
-    res.status(201).json({ message: 'User registered', userId: userId });
+
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Email already exists' });
@@ -97,10 +98,10 @@ authRouter.post('/login', async (req,res) => {
     }
 
     //I have to query the database of users
-    const query = 'SELECT * from users where deleted_at is null';
-    const [results] = await db.query(query);
-    const user = results.find( item => item.email === req.body.email);
-
+    const query = 'SELECT * FROM users WHERE email = ? AND deleted_at IS NULL';
+   // 1. Let the Database do the work
+    const [results] = await db.query(query, [email]);
+    const user = results[0]; 
     if(!user){
       return res.status(400).json({ error: 'Cannot Find User' });
     }
@@ -113,7 +114,7 @@ authRouter.post('/login', async (req,res) => {
       // here is where i create the json web token
       const accessToken = jwt.sign({'id':user.id, 'email':user.email},
                           process.env.JWT_SECRET, 
-                          { expiresIn: '15s' });
+                          { expiresIn: '15m' });
 
       // here is where i create the refresh token
       const refreshToken = jwt.sign(

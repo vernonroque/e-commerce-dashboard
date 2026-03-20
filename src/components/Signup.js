@@ -1,7 +1,6 @@
 import React,{useState, useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
 import '../stylesheets/Signup.css';
-import OnboardStore from './OnboardStore.js';
 
 function Signup() {
     const navigate = useNavigate();
@@ -16,10 +15,12 @@ function Signup() {
             console.log("The form data is >>>", formData);
             const data = Object.fromEntries(formData.entries());
             console.log('Form Data in an object:', data);
+            const backendBaseUrl = process.env.REACT_APP_BACKEND_ORIGIN || 'http://localhost:8080';
         
             try {
-                const response = await fetch('http://localhost:8080/api/auth/register', {
+                const response = await fetch(`${backendBaseUrl}/api/auth/register`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                     },

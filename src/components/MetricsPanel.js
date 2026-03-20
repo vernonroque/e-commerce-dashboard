@@ -29,7 +29,7 @@ function MetricsPanel({dateRange,selStore}) {
       const fetchRevenue = async () => {
         if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
         console.log("I am in the fetchRevenue effect");
-        const baseUrlDev = 'http://localhost:8080';
+        const baseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
         const path = '/api/metrics/revenue'
         // console.log("The dateRange in metrics panel is >>>", dateRange);
         // console.log("the dateRange start date type is >>>", typeof dateRange.startDate);
@@ -38,7 +38,7 @@ function MetricsPanel({dateRange,selStore}) {
               method: "GET",
         }
 
-        const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+        const apiEndpoint = `${baseUrl}${path}?${queries}`;
         
         const response = await apiFetch(apiEndpoint,options)
 
@@ -74,14 +74,15 @@ function MetricsPanel({dateRange,selStore}) {
         if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
 
         console.log("I am in the fetchAdSpend effect");
-        const baseUrlDev = 'http://localhost:8080';
+        const baseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
+        console.log("The base url in the fetchAdSpend function is >>>", baseUrl);
         const path = '/api/metrics/adspend'
         const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
         const options = {
               method: "GET",
         }
 
-        const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+        const apiEndpoint = `${baseUrl}${path}?${queries}`;
         
         const response = await apiFetch(apiEndpoint,options)
 
@@ -117,14 +118,15 @@ function MetricsPanel({dateRange,selStore}) {
         if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
 
         console.log("I am in the netProfit effect");
-        const baseUrlDev = 'http://localhost:8080';
+        const baseUrl = 'http://localhost:8080';
+        console.log("The base url in the fetchNetProfit function is >>>", baseUrl);
         const path = '/api/metrics/net_profit'
         const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
         const options = {
               method: "GET",
         }
 
-        const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+        const apiEndpoint = `${baseUrl}${path}?${queries}`;
         
         const response = await apiFetch(apiEndpoint,options)
 
@@ -160,14 +162,14 @@ function MetricsPanel({dateRange,selStore}) {
         if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
 
         console.log("I am in the contribution margin effect");
-        const baseUrlDev = 'http://localhost:8080';
+        const baseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
         const path = '/api/metrics/contribution_margin'
         const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
         const options = {
               method: "GET",
         }
 
-        const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+        const apiEndpoint = `${baseUrl}${path}?${queries}`;
         
         const response = await apiFetch(apiEndpoint,options)
 
@@ -202,15 +204,15 @@ function MetricsPanel({dateRange,selStore}) {
     const fetchBlendedROAS = async () => {
       if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
 
-      console.log("I am in the contribution margin effect");
-      const baseUrlDev = 'http://localhost:8080';
+      console.log("I am in the blended ROAS effect");
+      const baseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
       const path = '/api/metrics/blended_roas'
       const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
       const options = {
             method: "GET",
       }
 
-      const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+      const apiEndpoint = `${baseUrl}${path}?${queries}`;
       
       const response = await apiFetch(apiEndpoint,options)
 
@@ -239,22 +241,22 @@ function MetricsPanel({dateRange,selStore}) {
 
   },[selStore, dateRange]);
 
-  // api call for blended return on ad spend
+  // api call for breakeven return on ad spend
   useEffect(() => {
       
     const fetchBreakevenROAS = async () => {
 
       if (!dateRange.startDate || !dateRange.endDate || !selStore) return;
 
-      console.log("I am in the contribution margin effect");
-      const baseUrlDev = 'http://localhost:8080';
+      console.log("I am in the breakeven ROAS effect");
+      const baseUrl = process.env.REACT_APP_BACKEND_ORIGIN;
       const path = '/api/metrics/breakeven_roas'
       const queries = `id=${selStore.id}&start=${dateRange.startDate}&end=${dateRange.endDate}`;
       const options = {
             method: "GET",
       }
 
-      const apiEndpoint = `${baseUrlDev}${path}?${queries}`;
+      const apiEndpoint = `${baseUrl}${path}?${queries}`;
       
       const response = await apiFetch(apiEndpoint,options)
 

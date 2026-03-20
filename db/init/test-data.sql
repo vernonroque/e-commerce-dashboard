@@ -70,7 +70,7 @@ VALUES
 INSERT INTO ad_spend_daily
 (store_id, ad_platform_id, date, spend, impressions, clicks, conversions, revenue_attributed)
 VALUES
-(1, 1, '2026-02-15', 50.00, 10000, 400, 10, 150.00),
+(1, 1, '2026-03-15', 50.00, 10000, 400, 10, 150.00),
 (2, 2, '2026-02-15', 30.00, 8000, 300, 8, 90.00),
 (3, 1, '2026-02-15', 40.00, 9000, 350, 9, 120.00);
 
@@ -81,11 +81,11 @@ VALUES
 (2, 'shopify', 300.00, '2026-02-16', 'paid'),
 (3, 'paypal', 400.00, '2026-02-16', 'pending');
 
-INSERT INTO daily_profit_metrics
-(store_id, date, total_revenue, total_cogs, total_shipping,
- total_processing_fees, total_refunds, total_ad_spend,
- net_profit, blended_roas, breakeven_roas)
-VALUES
-(1, '2026-02-15', 120.00, 45.00, 8.00, 3.50, 0.00, 50.00, 13.50, 2.40, 1.85),
-(2, '2026-02-15', 75.00, 36.00, 8.00, 2.20, 0.00, 30.00, -1.20, 2.50, 2.10),
-(3, '2026-02-15', 95.00, 22.00, 5.00, 2.80, 0.00, 40.00, 25.20, 2.38, 1.60);
+-- INSERT INTO daily_profit_metrics
+-- (store_id, date, total_revenue, total_cogs, total_shipping,
+--  total_processing_fees, total_refunds, total_ad_spend,
+--  net_profit, blended_roas, breakeven_roas)
+-- VALUES
+-- (1, '2026-02-15', 120.00, 45.00, 8.00, 3.50, 0.00, 50.00, 13.50, 2.40, 1.85),
+-- (2, '2026-02-15', 75.00, 36.00, 8.00, 2.20, 0.00, 30.00, -1.20, 2.50, 2.10),
+-- (3, '2026-02-15', 95.00, 22.00, 5.00, 2.80, 0.00, 40.00, 25.20, 2.38, 1.60);
