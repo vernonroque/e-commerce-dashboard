@@ -111,6 +111,26 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
             await db.query(sql, [userId, store, currency, timezone]);
 
     }
+    async function fetchProducts(userId, shop, accessToken){
+         // here make a shopify api call to get the currency and timezone for store
+        const storeResponse = await axios.get(`https://${shop}/admin/api/2026-01/products.json`, {
+            headers: {
+                'X-Shopify-Access-Token': accessToken
+            }
+        });
+        console.log("Store response from Shopify in fetchProducts >>>", storeResponse.data);
+        const productList = storeResponse.data.products;
+        for (let product of productList){
+            console.log("The product variant is >>>",product.variants[0]);
+        }
+        // here i fetch the store id from database to link the products to the store
+
+        const sql = ` SELECT id FROM stores WHERE user_id = ? and name = ?
+                    VALUES(?, ?)`;
+
+           const [rows] = await db.query(sql, [userId, shop]);
+            const storeId = rows[0].id;
+    }
     try {
         // Exchange the temporary code for a permanent access token
         console.log("Received callback query parameters >>>", req.query);
@@ -144,7 +164,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
             scope: scope
         });
         // here make a shopify api call to get the currency and timezone for store
-        const storeResponse = await axios.get(`https://${shop}/admin/api/2023-04/shop.json`, {
+        const storeResponse = await axios.get(`https://${shop}/admin/api/2026-01/shop.json`, {
             headers: {
                 'X-Shopify-Access-Token': accessToken
             }
@@ -156,6 +176,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
         const timezone = storeData.iana_timezone;
 
         await saveStore(userId, storeName, currency, timezone);
+        await fetchProducts(userId, shop, accessToken);
 
         console.log("Shopify session saved successfully in the database");
         // const session = await shopify.auth.validateAuthCallback(req, res, req.query);
