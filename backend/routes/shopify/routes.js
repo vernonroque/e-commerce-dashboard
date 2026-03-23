@@ -118,18 +118,23 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
                 'X-Shopify-Access-Token': accessToken
             }
         });
-        console.log("Store response from Shopify in fetchProducts >>>", storeResponse.data);
+         console.log("Store response from Shopify in fetchProducts >>>", storeResponse.data);
         const productList = storeResponse.data.products;
-        for (let product of productList){
-            console.log("The product variant is >>>",product.variants[0]);
-        }
+        // for (let product of productList){
+        //     if(product.variants.length > 1){
+        //         console.log("The product has multiple variants >>>", product.title);
+        //         console.log("The product variants are >>>", product.variants);
+        //         console.log("------------------------------");
+        //     }
+        //     //console.log("The product variant is >>>",product.variants.length);
+        // }
+
         // here i fetch the store id from database to link the products to the store
+        // const sql = ` SELECT id FROM stores WHERE user_id = ? and name = ?
+        //             VALUES(?, ?)`;
 
-        const sql = ` SELECT id FROM stores WHERE user_id = ? and name = ?
-                    VALUES(?, ?)`;
-
-           const [rows] = await db.query(sql, [userId, shop]);
-            const storeId = rows[0].id;
+        //    const [rows] = await db.query(sql, [userId, shop]);
+        //     const storeId = rows[0].id;
     }
     try {
         // Exchange the temporary code for a permanent access token
