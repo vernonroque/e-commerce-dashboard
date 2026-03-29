@@ -3,6 +3,8 @@ const db = require('../../db');
 const shopifyRouter = express.Router();
 const axios = require('axios');
 const shopifyProductService = require('../../services/shopify.service.product.js');
+const shopifyOrdersService = require('../../services/shopify.service.orders.js');
+const { fetchShopifyToken } = require('../../utils/fetchShopifyToken.js');
 require('dotenv').config();
 /**
  * Imports the `encrypt` utility from the crypto helper module.
@@ -14,11 +16,9 @@ require('dotenv').config();
 const { encrypt } = require('../../utils/crypto.js');
 
 shopifyRouter.post('/oauth', async (req, res) => {
-    console.log("I am in the shopify oauth route >>>");
     try {
         // 1. Receive the shopify store name from frontend
         const shop = req.body.shop;
-        console.log("Received shop name from frontend >>>", shop);
 
         if (!shop) {
             return res.status(400).json({ message: 'Shop name is required' });
@@ -26,9 +26,6 @@ shopifyRouter.post('/oauth', async (req, res) => {
 
         const shopFormatted = shop.toLowerCase().trim().replace(/\s+/g, '-');
         const baseURL = `https://${shopFormatted}.myshopify.com`
-
-        console.log("The client id is >>>", process.env.SHOPIFY_API_KEY);
-        console.log("The redirect uri is >>>", process.env.REDIRECT_URI);
         const redirectUrl = `${baseURL}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&redirect_uri=${process.env.REDIRECT_URI}`;
     
         // Send the URL as JSON instead of redirecting
@@ -45,8 +42,6 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
 
     try {
         // Exchange the temporary code for a permanent access token
-        console.log("Received callback query parameters >>>", req.query);
-
         // with the code i have to make a POST request to Shopify's access token endpoint to get the access token
         const code = req.query.code;
         const shop = req.query.shop;
@@ -69,8 +64,6 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
 
         // here make a shopify api call to get the currency and timezone for store
         const storeResponse = await shopifyProductService.fetchShopifyShop(shop, accessToken);
-      
-        //console.log("Store response from Shopify >>>", storeResponse.data);
         const storeData = storeResponse.data.shop;
         //const storeId = storeData.id;
         const storeName = storeData.name;
@@ -84,6 +77,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
 
         for (let productId in products){
             const product = products[productId];
+            const productTitle = product.title;
             for (let variant of product.variants){
                 const cogs = await shopifyProductService.fetchCostOfGoodsSold(variant.inventoryItemId, accessToken, shop);
                 variant.cogs = cogs;
@@ -91,6 +85,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
                     //here also include the product title as a key value pair
                     id: variant.id,
                     productId: variant.productId,
+                    productTitle: productTitle,
                     title: variant.title,
                     price: variant.price,
                     inventoryItemId: variant.inventoryItemId,
@@ -100,42 +95,68 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
             }
         };
         // i need to fetch the database for tables stores to get that store id
-        console.log("The store name is >>>", storeName);
         const response = await shopifyProductService.fetchDbStores(userId, storeName);
         const dbStores =response[0];
-        console.log("The stores from the database for the user are >>>", dbStores);
-        console.log("the datatype of dbStores is >>>", typeof dbStores);
         const storeRecord = dbStores.find(store => store.name === storeName);
         const storeIdFromDb = storeRecord ? storeRecord.id : null;
-        console.log("The store id from the database is >>>", storeIdFromDb);
 
         for (let variantId in variantsPayload){
             const variant = variantsPayload[variantId];
             const shopifyProductId = variant.productId;
             const shopifyVariantId = variant.id;
-            const title = variant.title;
             const shippingCost = variant.shippingCost;
+            const combinedTitle = `${variant.productTitle} - ${variant.title}`;
             const saveProductPayload ={
                 storeId: storeIdFromDb,
                 shopifyProductId: shopifyProductId,
                 shopifyVariantId: shopifyVariantId,
-                title: title,
+                title: combinedTitle,
                 cogs: variant.cogs,
                 shippingCost: shippingCost
             }
             await shopifyProductService.saveProduct(saveProductPayload);
         };
 
-        //console.log("The variants payload with cogs is >>>", variantsPayload);
-
         // const session = await shopify.auth.validateAuthCallback(req, res, req.query);
-        const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-        res.redirect(`${frontendUrl}/dashboard`);
+        //const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+        const backendUrl = process.env.BACKEND_ORIGIN || 'http://localhost:8080';
+        // 3. Hand off to the orders route, forwarding what it needs
+
+        res.redirect(`${backendUrl}/api/shopify/auth/orders?shop=${storeName}`);
+        // res.redirect(`${frontendUrl}/dashboard`);
 
     } catch (error) {
         console.error('OAuth Error:', error);
         res.status(500).json({ message: 'Failed to initiate OAuth' });
+    }    
+});
+
+shopifyRouter.get('/auth/orders', async (req, res) => {
+    try {
+        const shop = req.query.shop;
+        const userId = req.user.id;
+        console.log("Received shop name in orders route >>>", shop);
+
+        // here i need to fetch the db to get the shopify access token 
+        const accessToken = await fetchShopifyToken(userId, shop);
+        console.log("Fetched access token in orders route >>>", accessToken);
+
+
+        // need to fetch draft orders 
+
+        // need to convert draft orders into real (test) orders
+        
+        const orders = await shopifyOrdersService.fetchOrders(shop, accessToken);
+        console.log("Orders fetched in orders route >>>", orders);
+
+        const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+        res.redirect(`${frontendUrl}/dashboard`);
+
+    } catch (error) {
+        console.error('Orders Route Error:', error);
+        res.status(500).json({ message: 'Failed to load orders' });
     }
+
 });
 
 module.exports = shopifyRouter;
