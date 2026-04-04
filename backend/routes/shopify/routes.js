@@ -63,16 +63,15 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
         });
 
         // here make a shopify api call to get the currency and timezone for store
-        const storeResponse = await shopifyProductService.fetchShopifyShop(shop, accessToken);
-        const storeData = storeResponse.data.shop;
+        const storeData = await shopifyProductService.fetchShopifyShop(shop, accessToken);
         //const storeId = storeData.id;
         const storeName = storeData.name;
-        const currency = storeData.currency;
-        const timezone = storeData.iana_timezone;
+        const currency = storeData.currencyCode;
+        const timezone = storeData.ianaTimezone;
 
         await shopifyProductService.saveStore(userId, storeName, currency, timezone);
         const products = await shopifyProductService.fetchProducts(shop, accessToken);
-        //console.log("The products returned are >>>", products);
+        console.log("The products returned are >>>", products);
         const variantsPayload = {};
 
         for (let productId in products){
@@ -99,6 +98,8 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
         const dbStores =response[0];
         const storeRecord = dbStores.find(store => store.name === storeName);
         const storeIdFromDb = storeRecord ? storeRecord.id : null;
+
+        console.log("the variants payload is >>>", variantsPayload);
 
         for (let variantId in variantsPayload){
             const variant = variantsPayload[variantId];
@@ -141,13 +142,30 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
         const accessToken = await fetchShopifyToken(userId, shop);
         console.log("Fetched access token in orders route >>>", accessToken);
 
-
         // need to fetch draft orders 
 
         // need to convert draft orders into real (test) orders
         
         const orders = await shopifyOrdersService.fetchOrders(shop, accessToken);
-        console.log("Orders fetched in orders route >>>", orders);
+        //console.log("Orders fetched in orders route >>>", orders);
+
+        // for(const order of orders){
+
+        //     console.log("The currentTotalPriceSet in the order is >>>", order.currentTotalPriceSet);
+        //     console.log("The currentShippingPriceSet in the order is >>>", order.currentShippingPriceSet);
+        //     console.log("The currentTotalTaxSet in the order is >>>", order.currentTotalTaxSet);
+        //     console.log("The currentTotalDiscountsSet in the order is >>>", order.currentTotalDiscountsSet);
+
+        // };
+
+        // 1. Extract amount from each shopMoney object before writing to your DECIMAL columns
+        // 2. Sum refunds[].totalRefundedSet.shopMoney.amount to populate total_refunds
+        // 3. payment_processing_fee will need a separate source (e.g. Shopify Payments transaction fees via the REST API's transactions endpoint)
+
+        // const totalRefunds = order.refunds
+        // .flatMap(r => r.transactions.edges.map(e => e.node))
+        // .filter(t => t.kind === 'REFUND' && t.status === 'SUCCESS')
+        // .reduce((sum, t) => sum + parseFloat(t.amountSet.shopMoney.amount), 0);
 
         const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
         res.redirect(`${frontendUrl}/dashboard`);

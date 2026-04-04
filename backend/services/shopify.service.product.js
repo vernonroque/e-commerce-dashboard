@@ -24,13 +24,31 @@ async function saveShopSession({ userId, shop, accessToken, scope }) {
 };
 
 async function fetchShopifyShop(shop, accessToken) {
-    const storeResponse = await axios.get(`https://${shop}/admin/api/2026-01/shop.json`, {
+    const response = await axios(`https://${shop}/admin/api/2026-01/graphql.json`, {
+        method: 'POST',
         headers: {
-            'X-Shopify-Access-Token': accessToken
-        }
+            'Content-Type': 'application/json',
+            'X-Shopify-Access-Token': accessToken,
+        },
+        data: JSON.stringify({
+            query: `
+                query {
+                    shop {
+                        name
+                        currencyCode
+                        ianaTimezone
+                    }
+                }
+            `
+        })
     });
 
-    return storeResponse;
+    if (response.data.errors) {
+        console.error('GraphQL errors:', response.data.errors);
+        throw new Error('GraphQL shop query failed');
+    }
+
+    return response.data.data.shop;
 
 };
 
@@ -57,37 +75,81 @@ async function saveStore(userId, store, currency, timezone) {
 
 async function fetchProducts(shop, accessToken){
 
-    // here make a shopify api call to get the products for store
+    const numericId = (gid) => gid.split('/').pop();
 
-    const storeResponse = await axios.get(`https://${shop}/admin/api/2026-01/products.json`, {
-        headers: {
-            'X-Shopify-Access-Token': accessToken
+    const query = `
+        query GetProducts($first: Int!, $after: String) {
+            products(first: $first, after: $after) {
+                edges {
+                    node {
+                        id
+                        title
+                        variants(first: 250) {
+                            edges {
+                                node {
+                                    id
+                                    title
+                                    price
+                                    inventoryItem {
+                                        id
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+            }
         }
-    });
-    // console.log("Store response from Shopify in fetchProducts >>>", storeResponse.data);
-    const productList = await storeResponse.data.products;
+    `;
+
     const productPayload = {};
-    for (let product of productList){
-        //     if(product.variants.length > 1){
-        //     console.log("The product has multiple variants >>>", product.title);
-        //     console.log("The product variants are >>>", product.variants);
-        //     console.log("------------------------------");
-        // }
-        //console.log("The product variant is >>>",product.variants.length);
-        productPayload[product.id] = {
-            id: product.id,
-            title: product.title,
-            variants: product.variants.map(variant => ({
-                id: variant.id,
-                productId: variant.product_id,
-                title: variant.title,
-                price: variant.price,
-                inventoryItemId: variant.inventory_item_id,
-                cogs:0,
-                shippingCost:5
-            }))
+    let hasNextPage = true;
+    let cursor = null;
+
+    while (hasNextPage) {
+        const response = await axios(`https://${shop}/admin/api/2026-01/graphql.json`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': accessToken,
+            },
+            data: JSON.stringify({
+                query,
+                variables: { first: 250, after: cursor }
+            })
+        });
+
+        if (response.data.errors) {
+            console.error('GraphQL errors:', response.data.errors);
+            throw new Error('GraphQL products query failed');
         }
-    };
+
+        const { edges, pageInfo } = response.data.data.products;
+
+        for (let { node: product } of edges) {
+            const productNumericId = numericId(product.id);
+            productPayload[productNumericId] = {
+                id: productNumericId,
+                title: product.title,
+                variants: product.variants.edges.map(({ node: variant }) => ({
+                    id: numericId(variant.id),
+                    productId: productNumericId,
+                    title: variant.title,
+                    price: variant.price,
+                    inventoryItemId: numericId(variant.inventoryItem.id),
+                    cogs: 0,
+                    shippingCost: 5
+                }))
+            };
+        }
+
+        hasNextPage = pageInfo.hasNextPage;
+        cursor = pageInfo.endCursor;
+    }
 
     return productPayload;
 };
