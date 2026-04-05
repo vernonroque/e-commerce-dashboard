@@ -79,7 +79,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
             const productTitle = product.title;
             for (let variant of product.variants){
                 const cogs = await shopifyProductService.fetchCostOfGoodsSold(variant.inventoryItemId, accessToken, shop);
-                variant.cogs = cogs;
+                //variant.cogs = cogs;
                 variantsPayload[variant.id] = {
                     //here also include the product title as a key value pair
                     id: variant.id,
@@ -99,7 +99,7 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
         const storeRecord = dbStores.find(store => store.name === storeName);
         const storeIdFromDb = storeRecord ? storeRecord.id : null;
 
-        console.log("the variants payload is >>>", variantsPayload);
+        //console.log("the variants payload is >>>", variantsPayload);
 
         for (let variantId in variantsPayload){
             const variant = variantsPayload[variantId];
@@ -136,39 +136,61 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
     try {
         const shop = req.query.shop;
         const userId = req.user.id;
-        console.log("Received shop name in orders route >>>", shop);
+        console.log("The total req query object in orders route >>>", req.query);
+        console.log("the user object in orders route >>>", req.user);
+        //console.log("Received shop name in orders route >>>", shop);
 
         // here i need to fetch the db to get the shopify access token 
         const accessToken = await fetchShopifyToken(userId, shop);
         console.log("Fetched access token in orders route >>>", accessToken);
-
-        // need to fetch draft orders 
-
-        // need to convert draft orders into real (test) orders
         
         const orders = await shopifyOrdersService.fetchOrders(shop, accessToken);
-        //console.log("Orders fetched in orders route >>>", orders);
+        console.log("Fetched orders in orders route >>>", orders);
 
-        // for(const order of orders){
+        // here i will grab the store id from the db
+        const response = await shopifyProductService.fetchDbStores(userId, shop);
+        const dbStores =response[0];
+        const storeRecord = dbStores.find(store => store.name === shop);
+        const storeIdFromDb = storeRecord ? storeRecord.id : null;
 
-        //     console.log("The currentTotalPriceSet in the order is >>>", order.currentTotalPriceSet);
-        //     console.log("The currentShippingPriceSet in the order is >>>", order.currentShippingPriceSet);
-        //     console.log("The currentTotalTaxSet in the order is >>>", order.currentTotalTaxSet);
-        //     console.log("The currentTotalDiscountsSet in the order is >>>", order.currentTotalDiscountsSet);
+        const ordersPayload = {};
 
-        // };
+        for(const order of orders){
+            ordersPayload[order.id] = {
+                id: order.id,
+                storeId: storeIdFromDb,
+                orderNumber: order.number,
+                totalPrice: order.currentTotalPriceSet.shopMoney.amount,
+                subTotalPrice: order.currentSubtotalPriceSet.shopMoney.amount,
+                shippingPrice: order.currentShippingPriceSet.shopMoney.amount,
+                totalTax: order.currentTotalTaxSet.shopMoney.amount,
+                orderCreatedAt: order.createdAt,
+                totalRefunds: order.refunds
+                    .flatMap(r => r.transactions.edges.map(e => e.node))
+                    .filter(t => t.kind === 'REFUND' && t.status === 'SUCCESS')
+                    .reduce((sum, t) => sum + parseFloat(t.amountSet.shopMoney.amount), 0),
+                paymentProcessingFee: 0
+            }
+        };
 
-        // 1. Extract amount from each shopMoney object before writing to your DECIMAL columns
-        // 2. Sum refunds[].totalRefundedSet.shopMoney.amount to populate total_refunds
-        // 3. payment_processing_fee will need a separate source (e.g. Shopify Payments transaction fees via the REST API's transactions endpoint)
+        // 3. payment_processing_fee will need a separate source (e.g. Shopify Payments transaction fees via the GraphQL query)
+        for (let orderId in ordersPayload){
+            const paymentProcessingFee = await shopifyOrdersService.fetchPaymentProcessingFee(orderId, accessToken, shop);
+            console.log(`Fetched payment processing fee for order ${orderId} >>>`, paymentProcessingFee);
+            ordersPayload[orderId].paymentProcessingFee = paymentProcessingFee;
+        };
 
-        // const totalRefunds = order.refunds
-        // .flatMap(r => r.transactions.edges.map(e => e.node))
-        // .filter(t => t.kind === 'REFUND' && t.status === 'SUCCESS')
-        // .reduce((sum, t) => sum + parseFloat(t.amountSet.shopMoney.amount), 0);
+        console.log("Constructed orders payload >>>", ordersPayload);
 
         const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
         res.redirect(`${frontendUrl}/dashboard`);
+
+        // here i will loop through the orders payload and save each one to db
+        for (const orderId in ordersPayload){
+            const orderData = ordersPayload[orderId];
+            await shopifyOrdersService.saveOrdersToDb(orderData);
+        }
+
 
     } catch (error) {
         console.error('Orders Route Error:', error);

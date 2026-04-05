@@ -155,13 +155,34 @@ async function fetchProducts(shop, accessToken){
 };
 
 async function fetchCostOfGoodsSold(inventoryItemId, accessToken, shop){
-    const inventoryResponse = await axios.get(`https://${shop}/admin/api/2026-01/inventory_items/${inventoryItemId}.json`, {
+    const gid = `gid://shopify/InventoryItem/${inventoryItemId}`;
+    const response = await axios(`https://${shop}/admin/api/2026-01/graphql.json`, {
+        method: 'POST',
         headers: {
-            'X-Shopify-Access-Token': accessToken
-        }
+            'Content-Type': 'application/json',
+            'X-Shopify-Access-Token': accessToken,
+        },
+        data: JSON.stringify({
+            query: `
+                query GetInventoryItemCost($id: ID!) {
+                    inventoryItem(id: $id) {
+                        unitCost {
+                            amount
+                        }
+                    }
+                }
+            `,
+            variables: { id: gid }
+        })
     });
-    //console.log("Inventory response from Shopify in fetchCostOfGoodsSold >>>", inventoryResponse.data);
-    const cogs = inventoryResponse.data.inventory_item.cost;
+
+    if (response.data.errors) {
+        console.error('GraphQL errors:', response.data.errors);
+        throw new Error('GraphQL inventoryItem query failed');
+    }
+
+    console.log("Inventory response from Shopify in fetchCostOfGoodsSold >>>", response.data);
+    const cogs = response.data.data.inventoryItem?.unitCost?.amount ?? null;
     return cogs;
 };
 

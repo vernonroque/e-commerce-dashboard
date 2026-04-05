@@ -1,5 +1,6 @@
 const db = require('../db');
 const axios = require('axios');
+const moment = require('moment');
 require('dotenv').config();
 
 async function fetchOrders(shop, accessToken){
@@ -57,62 +58,93 @@ async function fetchOrders(shop, accessToken){
     }
 
 };
-// async function fetchDraftOrders(shop, accessToken){
-//     const shopFormatted = shop.toLowerCase().trim().replace(/\s+/g, '-');
-//     const storeDomain = `${shopFormatted}.myshopify.com`;
-//     try
-//         {
-//             const response = await axios(`https://${storeDomain}/admin/api/2026-01/graphql.json`, {
-//                 method: 'POST', // always POST, even for reads
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'X-Shopify-Access-Token': accessToken,
-//                 },
-//                 data: JSON.stringify({
-//                     query: `
-//                             query GetDraftOrders {
-//                                 draftOrders(first: 50) {
-//                                     edges {
-//                                         node {
-//                                             id
-//                                             name
-//                                             status
-//                                             createdAt
-//                                             totalPrice
-//                                             customer {
-//                                                 firstName
-//                                                 lastName
-//                                                 email
-//                                             }
-//                                             lineItems(first: 10) {
-//                                                 edges {
-//                                                     node {
-//                                                     title
-//                                                     quantity
-//                                                     originalUnitPrice
-//                                                     }
-//                                                 }
-//                                             }
-//                                         }
-//                                     }
-//                                     pageInfo {
-//                                     hasNextPage
-//                                     endCursor
-//                                     }
-//                                 }
-//                             }
-//                     `,
-//                 }),
-//             });
-//             const draftOrders = response.data.data.orders.edges.map(edge => edge.node);
-//             console.log("Fetched draft orders from Shopify >>>", draftOrders);
-//             return draftOrders;
-//         }catch (error){
-//             console.error('Error fetching draft orders from Shopify:', error);
-//             throw new Error('Failed to fetch draft orders');
-//         }
-// };
+async function fetchPaymentProcessingFee(orderId, accessToken, shop){
+    const shopFormatted = shop.toLowerCase().trim().replace(/\s+/g, '-');
+    const storeDomain = `${shopFormatted}.myshopify.com`;
+    console.log(`Fetching payment processing fee for order ${orderId} from Shopify...`);
+    // here i will make a GraphQL query to fetch the transactions for the order and sum up the fees from successful transactions of kind 'SALE'
+    const response = await axios(`https://${storeDomain}/admin/api/2026-01/graphql.json`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Access-Token': accessToken,
+        },
+        data: JSON.stringify({
+            query: `
+                    query GetOrderTransactions($orderId: ID!) {
+                        order(id: $orderId) {
+                            transactions(first: 250) {
+                                id
+                                kind
+                                status
+                                amountSet { shopMoney { amount currencyCode } }
+                                fees { amount { amount currencyCode } }
+                            }
+                        }
+                    }
+                `,
+            variables: { orderId }
+        })
+    });
+
+    if (response.data.errors) {
+        console.error('GraphQL errors:', response.data.errors);
+        throw new Error('GraphQL query for transactions failed');
+    }
+
+    const transactions = response.data.data.order.transactions;
+    const processingFee = transactions
+        .filter(t => t.kind === 'SALE' && t.status === 'SUCCESS')
+        .reduce((sum, t) => sum + t.fees.reduce((s, f) => s + parseFloat(f.amount.amount), 0), 0);
+
+    console.log(`Calculated payment processing fee for order ${orderId} is >>>`, processingFee);
+    return processingFee;
+};
+async function saveOrdersToDb(ordersPayload){
+    // here i will save the orders to the db using a bulk upsert operation
+        const { 
+            id, 
+            storeId, 
+            orderNumber, 
+            totalPrice, 
+            subTotalPrice, 
+            shippingPrice, 
+            totalTax, 
+            orderCreatedAt, 
+            totalRefunds, 
+            paymentProcessingFee 
+        } = ordersPayload;
+
+       const idOnly = id.split('/').pop(); // Extract the numeric ID from the Shopify format
+       const createdAtFormatted = moment(orderCreatedAt).format('YYYY-MM-DD HH:mm:ss');
+
+    
+        console.log("Saving order to DB with payload >>>", ordersPayload);
+    
+    const sql = `  INSERT INTO orders (store_id, shopify_order_id, order_number, total_price, subtotal_price, shipping_price, total_tax, order_created_at, total_refunds, payment_processing_fee)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        total_price = VALUES(total_price),
+        subtotal_price = VALUES(subtotal_price),
+        shipping_price = VALUES(shipping_price),
+        total_tax = VALUES(total_tax),
+        order_created_at = VALUES(order_created_at),
+        total_refunds = VALUES(total_refunds),
+        payment_processing_fee = VALUES(payment_processing_fee)
+    `;
+
+    try{
+        await db.query(sql, [storeId, idOnly, orderNumber, totalPrice, subTotalPrice, shippingPrice, totalTax, createdAtFormatted, totalRefunds, paymentProcessingFee]);
+        return true;
+    } catch (error) {
+        console.error('Database Error when saving orders:', error);
+        throw new Error('Failed to save orders');
+    }
+
+}
 
 module.exports = {
-    fetchOrders
+    fetchOrders,
+    fetchPaymentProcessingFee,
+    saveOrdersToDb
 };
