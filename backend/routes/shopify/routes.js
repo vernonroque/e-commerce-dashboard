@@ -133,23 +133,21 @@ shopifyRouter.get('/auth/callback', async (req, res) => {
 });
 
 shopifyRouter.get('/auth/orders', async (req, res) => {
+
     try {
         const shop = req.query.shop;
         const userId = req.user.id;
-        console.log("The total req query object in orders route >>>", req.query);
-        console.log("the user object in orders route >>>", req.user);
-        //console.log("Received shop name in orders route >>>", shop);
-
+      
         // here i need to fetch the db to get the shopify access token 
         const accessToken = await fetchShopifyToken(userId, shop);
-        console.log("Fetched access token in orders route >>>", accessToken);
         
         const orders = await shopifyOrdersService.fetchOrders(shop, accessToken);
-        console.log("Fetched orders in orders route >>>", orders);
 
         // here i will grab the store id from the db
         const response = await shopifyProductService.fetchDbStores(userId, shop);
         const dbStores =response[0];
+
+        console.log("Fetched stores from DB in orders route >>>", dbStores);
         const storeRecord = dbStores.find(store => store.name === shop);
         const storeIdFromDb = storeRecord ? storeRecord.id : null;
 
@@ -176,7 +174,6 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
         // 3. payment_processing_fee will need a separate source (e.g. Shopify Payments transaction fees via the GraphQL query)
         for (let orderId in ordersPayload){
             const paymentProcessingFee = await shopifyOrdersService.fetchPaymentProcessingFee(orderId, accessToken, shop);
-            console.log(`Fetched payment processing fee for order ${orderId} >>>`, paymentProcessingFee);
             ordersPayload[orderId].paymentProcessingFee = paymentProcessingFee;
         };
 
@@ -191,6 +188,10 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
             await shopifyOrdersService.saveOrdersToDb(orderData);
         }
 
+        // const backendUrl = process.env.BACKEND_ORIGIN || 'http://localhost:8080';
+        // 3. Hand off to the order-items route, forwarding what it needs
+
+        // res.redirect(`${backendUrl}/api/shopify/auth/orders?shop=${shop}`);
 
     } catch (error) {
         console.error('Orders Route Error:', error);
