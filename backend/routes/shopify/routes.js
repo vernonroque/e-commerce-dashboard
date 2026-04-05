@@ -167,7 +167,8 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
                     .flatMap(r => r.transactions.edges.map(e => e.node))
                     .filter(t => t.kind === 'REFUND' && t.status === 'SUCCESS')
                     .reduce((sum, t) => sum + parseFloat(t.amountSet.shopMoney.amount), 0),
-                paymentProcessingFee: 0
+                paymentProcessingFee: 0,
+                lineItems: order.lineItems.edges.map(e => e.node)
             }
         };
 
@@ -185,13 +186,9 @@ shopifyRouter.get('/auth/orders', async (req, res) => {
         // here i will loop through the orders payload and save each one to db
         for (const orderId in ordersPayload){
             const orderData = ordersPayload[orderId];
-            await shopifyOrdersService.saveOrdersToDb(orderData);
+            const dbOrderId = await shopifyOrdersService.saveOrdersToDb(orderData);
+            await shopifyOrdersService.saveOrderItemsToDb(dbOrderId, storeIdFromDb, orderData.lineItems);
         }
-
-        // const backendUrl = process.env.BACKEND_ORIGIN || 'http://localhost:8080';
-        // 3. Hand off to the order-items route, forwarding what it needs
-
-        // res.redirect(`${backendUrl}/api/shopify/auth/orders?shop=${shop}`);
 
     } catch (error) {
         console.error('Orders Route Error:', error);

@@ -80,23 +80,27 @@ metricsRouter.get('/net_profit', async(req,res)=> {
     const query = `
         SELECT
             COALESCE(rev.revenue, 0) AS revenue,
-            COALESCE(rev.total_cogs, 0) AS total_cogs,
+            COALESCE(cogs.total_cogs, 0) AS total_cogs,
             COALESCE(ads.total_adspend, 0) AS total_adspend,
-            COALESCE(rev.revenue, 0) - COALESCE(rev.total_cogs, 0) - COALESCE(ads.total_adspend, 0) AS net_profit
+            COALESCE(rev.revenue, 0) - COALESCE(cogs.total_cogs, 0) - COALESCE(ads.total_adspend, 0) AS net_profit
         FROM
         (
-            SELECT
-                SUM(o.total_price) AS revenue,
-                SUM(oi.quantity * oi.unit_cogs) AS total_cogs
-            FROM orders o
-            JOIN order_items oi ON o.id = oi.order_id
-            WHERE o.created_at BETWEEN ? AND ?
-            AND o.store_id = ?
+            SELECT SUM(total_price) AS revenue
+            FROM orders
+            WHERE created_at BETWEEN ? AND ?
+            AND store_id = ?
         ) rev
         JOIN
         (
-            SELECT
-                SUM(spend) AS total_adspend
+            SELECT SUM(oi.quantity * oi.unit_cogs) AS total_cogs
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE o.created_at BETWEEN ? AND ?
+            AND o.store_id = ?
+        ) cogs
+        JOIN
+        (
+            SELECT SUM(spend) AS total_adspend
             FROM ad_spend_daily
             WHERE date BETWEEN ? AND ?
             AND store_id = ?
@@ -105,12 +109,9 @@ metricsRouter.get('/net_profit', async(req,res)=> {
 
     try {
         const [rows] = await db.query(query, [
-            start,
-            end,
-            id,
-            start,
-            end,
-            id
+            start, end, id,  // revenue subquery
+            start, end, id,  // cogs subquery
+            start, end, id   // adspend subquery
         ]);
         console.log("The rows in the net profit route >>>", rows[0].total_adspend);
         const payload = {
@@ -137,23 +138,28 @@ metricsRouter.get('/contribution_margin', async(req,res)=> {
 
     const query = `
         SELECT
-                rev.revenue,
-                rev.total_cogs,
-                (rev.revenue - rev.total_cogs) / rev.revenue AS contr_margin
-            FROM
-            (
-                SELECT
-                    SUM(o.total_price) AS revenue,
-                    SUM(oi.quantity * oi.unit_cogs) AS total_cogs
-                FROM orders o
-                JOIN order_items oi ON o.id = oi.order_id
-                WHERE o.created_at BETWEEN ? AND ?
-                AND o.store_id = ?
-            ) rev;
+            rev.revenue,
+            cogs.total_cogs,
+            (rev.revenue - cogs.total_cogs) / rev.revenue AS contr_margin
+        FROM
+        (
+            SELECT SUM(total_price) AS revenue
+            FROM orders
+            WHERE created_at BETWEEN ? AND ?
+            AND store_id = ?
+        ) rev
+        JOIN
+        (
+            SELECT SUM(oi.quantity * oi.unit_cogs) AS total_cogs
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE o.created_at BETWEEN ? AND ?
+            AND o.store_id = ?
+        ) cogs;
     `;
 
     try {
-        const [rows] = await db.query(query, [start, end, id]);
+        const [rows] = await db.query(query, [start, end, id, start, end, id]);
 
         const payload = {
             'contr_margin': ''
@@ -240,22 +246,27 @@ metricsRouter.get('/breakeven_roas', async(req,res)=> {
     const query = `
         SELECT
             rev.revenue,
-            rev.total_cogs,
-            rev.revenue / NULLIF(rev.revenue - rev.total_cogs, 0) AS breakeven_roas
+            cogs.total_cogs,
+            rev.revenue / NULLIF(rev.revenue - cogs.total_cogs, 0) AS breakeven_roas
         FROM
         (
-            SELECT
-                SUM(o.total_price) AS revenue,
-                SUM(oi.quantity * oi.unit_cogs) AS total_cogs
-            FROM orders o
-            JOIN order_items oi ON o.id = oi.order_id
+            SELECT SUM(total_price) AS revenue
+            FROM orders
+            WHERE created_at BETWEEN ? AND ?
+            AND store_id = ?
+        ) rev
+        JOIN
+        (
+            SELECT SUM(oi.quantity * oi.unit_cogs) AS total_cogs
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
             WHERE o.created_at BETWEEN ? AND ?
             AND o.store_id = ?
-        ) rev;
+        ) cogs;
     `;
 
     try {
-        const [rows] = await db.query(query, [start, end, id]);
+        const [rows] = await db.query(query, [start, end, id, start, end, id]);
 
         const payload = {
             'breakeven_roas': ''

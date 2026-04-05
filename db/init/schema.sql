@@ -139,6 +139,7 @@ CREATE TABLE order_items (
     REFERENCES products(id)
     ON DELETE CASCADE,
 
+  UNIQUE KEY uq_order_item (order_id, product_id),
   INDEX (order_id),
   INDEX (product_id)
 );

@@ -21,10 +21,8 @@ async function fetchOrders(shop, accessToken){
                                 edges {
                                     node {
                                             id
-                                            name
                                             number
                                             createdAt
-                                            updatedAt
                                             displayFinancialStatus
                                             currentTotalPriceSet { shopMoney { amount currencyCode } }
                                             currentSubtotalPriceSet { shopMoney { amount currencyCode } }
@@ -32,8 +30,26 @@ async function fetchOrders(shop, accessToken){
                                             currentTotalTaxSet { shopMoney { amount currencyCode } }
                                             currentTotalDiscountsSet { shopMoney { amount currencyCode } }
                                             refunds {
-                                            totalRefundedSet { shopMoney { amount currencyCode } }
-                                    }
+                                                transactions(first: 50) {
+                                                    edges {
+                                                        node {
+                                                            kind
+                                                            status
+                                                            amountSet { shopMoney { amount currencyCode } }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            lineItems(first: 250) {
+                                                edges {
+                                                    node {
+                                                        quantity
+                                                        originalUnitPriceSet { shopMoney { amount } }
+                                                        originalTotalSet { shopMoney { amount } }
+                                                        variant { id }
+                                                    }
+                                                }
+                                            }
                                 }
                             }
                             pageInfo { hasNextPage endCursor }
@@ -124,6 +140,7 @@ async function saveOrdersToDb(ordersPayload){
     const sql = `  INSERT INTO orders (store_id, shopify_order_id, order_number, total_price, subtotal_price, shipping_price, total_tax, order_created_at, total_refunds, payment_processing_fee)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
+        id = LAST_INSERT_ID(id),
         total_price = VALUES(total_price),
         subtotal_price = VALUES(subtotal_price),
         shipping_price = VALUES(shipping_price),
@@ -134,8 +151,8 @@ async function saveOrdersToDb(ordersPayload){
     `;
 
     try{
-        await db.query(sql, [storeId, idOnly, orderNumber, totalPrice, subTotalPrice, shippingPrice, totalTax, createdAtFormatted, totalRefunds, paymentProcessingFee]);
-        return true;
+        const [result] = await db.query(sql, [storeId, idOnly, orderNumber, totalPrice, subTotalPrice, shippingPrice, totalTax, createdAtFormatted, totalRefunds, paymentProcessingFee]);
+        return result.insertId;
     } catch (error) {
         console.error('Database Error when saving orders:', error);
         throw new Error('Failed to save orders');
@@ -143,8 +160,56 @@ async function saveOrdersToDb(ordersPayload){
 
 }
 
+async function saveOrderItemsToDb(orderId, storeId, lineItems) {
+    for (const lineItem of lineItems) {
+        const variantGid = lineItem.variant?.id;
+        if (!variantGid) {
+            console.warn(`Skipping line item with no variant for order ${orderId}`);
+            continue;
+        }
+
+        const shopifyVariantId = variantGid.split('/').pop();
+
+        const [rows] = await db.query(
+            'SELECT id, cogs, shipping_cost FROM products WHERE store_id = ? AND shopify_variant_id = ?',
+            [storeId, shopifyVariantId]
+        );
+
+        if (!rows.length) {
+            console.warn(`No product found for variant ${shopifyVariantId} in store ${storeId}, skipping line item`);
+            continue;
+        }
+
+        const product = rows[0];
+        const quantity = lineItem.quantity;
+        const price = parseFloat(lineItem.originalUnitPriceSet.shopMoney.amount);
+        const lineRevenue = parseFloat(lineItem.originalTotalSet.shopMoney.amount);
+        const unitCogs = parseFloat(product.cogs) || 0;
+        const unitShippingCost = parseFloat(product.shipping_cost) || 0;
+
+        const sql = `
+            INSERT INTO order_items (order_id, product_id, quantity, price, line_revenue, unit_cogs, unit_shipping_cost)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+            quantity = VALUES(quantity),
+            price = VALUES(price),
+            line_revenue = VALUES(line_revenue),
+            unit_cogs = VALUES(unit_cogs),
+            unit_shipping_cost = VALUES(unit_shipping_cost)
+        `;
+
+        try {
+            await db.query(sql, [orderId, product.id, quantity, price, lineRevenue, unitCogs, unitShippingCost]);
+        } catch (error) {
+            console.error(`Database Error saving order item for order ${orderId}, product ${product.id}:`, error);
+            throw new Error('Failed to save order item');
+        }
+    }
+}
+
 module.exports = {
     fetchOrders,
     fetchPaymentProcessingFee,
-    saveOrdersToDb
+    saveOrdersToDb,
+    saveOrderItemsToDb
 };
