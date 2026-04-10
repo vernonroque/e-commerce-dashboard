@@ -158,6 +158,9 @@ CREATE TABLE ad_accounts (
   external_account_id VARCHAR(100) NOT NULL,
   account_name VARCHAR(255),
 
+  access_token TEXT NULL,
+  token_expires_at DATETIME NULL,
+
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT fk_ad_account_store

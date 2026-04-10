@@ -57,5 +57,6 @@ app.use('/api/dashboard', authenticateToken, require('./routes/dashboard/routes'
 app.use('/api/metrics', authenticateToken, require('./routes/metricsPanel/routes'));
 app.use('/api/users', require('./routes/users/routes'));
 app.use('/api/shopify',  authenticateToken, require('./routes/shopify/routes'));
+app.use('/api/ads', authenticateToken, require('./routes/ads/routes'));
 
 module.exports = app;
